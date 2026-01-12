@@ -1,6 +1,6 @@
 {
   "name": "react-tshirt-builder",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "type": "module",
   "description": "A React component for uploading, positioning, and resizing images on t-shirt templates",
   "main": "dist/index.cjs.js",

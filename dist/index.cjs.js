@@ -121,6 +121,20 @@ function useImageTransform({ images, config, containerRef, onChange }) {
     const [isDragging, setIsDragging] = React.useState(false);
     const [dragMode, setDragMode] = React.useState(null);
     const dragStateRef = React.useRef(null);
+    // Store latest values in refs to avoid recreating callbacks
+    const imagesRef = React.useRef(images);
+    const onChangeRef = React.useRef(onChange);
+    const configRef = React.useRef(config);
+    // Keep refs updated
+    React.useEffect(() => {
+        imagesRef.current = images;
+    }, [images]);
+    React.useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
+    React.useEffect(() => {
+        configRef.current = config;
+    }, [config]);
     // Auto-select newly added image
     React.useEffect(() => {
         if (images.length > 0 && !selectedId) {
@@ -137,7 +151,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
     const clampTransform = React.useCallback((newTransform) => {
         const { position, size, rotation } = newTransform;
         // Only clamp size to min, allow position to be anywhere
-        const minSize = config.minImageSize || 20;
+        const minSize = configRef.current.minImageSize || 20;
         const clampedWidth = Math.max(minSize, size.width);
         const clampedHeight = Math.max(minSize, size.height);
         return {
@@ -145,14 +159,15 @@ function useImageTransform({ images, config, containerRef, onChange }) {
             size: { width: clampedWidth, height: clampedHeight },
             rotation,
         };
-    }, [config]);
+    }, []);
     const updateImageTransform = React.useCallback((imageId, newTransform) => {
+        var _a;
         const clamped = clampTransform(newTransform);
-        const updatedImages = images.map((img) => img.id === imageId ? { ...img, transform: clamped } : img);
-        onChange === null || onChange === void 0 ? void 0 : onChange(updatedImages);
-    }, [clampTransform, images, onChange]);
+        const updatedImages = imagesRef.current.map((img) => img.id === imageId ? { ...img, transform: clamped } : img);
+        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, updatedImages);
+    }, [clampTransform]);
     const handleMouseDown = React.useCallback((event, imageId, mode, handle) => {
-        const image = images.find((img) => img.id === imageId);
+        const image = imagesRef.current.find((img) => img.id === imageId);
         if (!image)
             return;
         event.preventDefault();
@@ -167,12 +182,12 @@ function useImageTransform({ images, config, containerRef, onChange }) {
             startTransform: { ...image.transform },
             handle,
         };
-    }, [images]);
+    }, []);
     const handleMouseMove = React.useCallback((event) => {
         const dragState = dragStateRef.current;
         if (!dragState)
             return;
-        const image = images.find((img) => img.id === dragState.imageId);
+        const image = imagesRef.current.find((img) => img.id === dragState.imageId);
         if (!image)
             return;
         const deltaX = event.clientX - dragState.startPosition.x;
@@ -181,7 +196,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         switch (dragState.mode) {
             case 'move':
                 newTransform = {
-                    ...image.transform,
+                    ...dragState.startTransform,
                     position: {
                         x: dragState.startTransform.position.x + deltaX,
                         y: dragState.startTransform.position.y + deltaY,
@@ -191,7 +206,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
             case 'resize': {
                 const { handle } = dragState;
                 const aspectRatio = image.naturalWidth / image.naturalHeight;
-                const minSize = config.minImageSize || 20;
+                const minSize = configRef.current.minImageSize || 20;
                 let newWidth = dragState.startTransform.size.width;
                 let newX = dragState.startTransform.position.x;
                 let newY = dragState.startTransform.position.y;
@@ -231,14 +246,14 @@ function useImageTransform({ images, config, containerRef, onChange }) {
                         break;
                 }
                 newTransform = {
-                    ...image.transform,
+                    ...dragState.startTransform,
                     position: { x: newX, y: newY },
                     size: { width: clampedWidth, height: clampedHeight },
                 };
                 break;
             }
             case 'rotate': {
-                if (!config.allowRotation) {
+                if (!configRef.current.allowRotation) {
                     return;
                 }
                 // Get container position to convert client coords to local coords
@@ -261,7 +276,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
                 const rotation = dragState.startTransform.rotation +
                     ((currentAngle - startAngle) * 180) / Math.PI;
                 newTransform = {
-                    ...image.transform,
+                    ...dragState.startTransform,
                     rotation,
                 };
                 break;
@@ -270,7 +285,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
                 return;
         }
         updateImageTransform(dragState.imageId, newTransform);
-    }, [images, config.allowRotation, containerRef, updateImageTransform]);
+    }, [containerRef, updateImageTransform]);
     const handleMouseUp = React.useCallback(() => {
         setIsDragging(false);
         setDragMode(null);
@@ -294,29 +309,36 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         setSelectedId(null);
     }, []);
     const deleteImage = React.useCallback((imageId) => {
-        const updatedImages = images.filter((img) => img.id !== imageId);
-        onChange === null || onChange === void 0 ? void 0 : onChange(updatedImages);
-    }, [images, onChange]);
+        var _a;
+        const updatedImages = imagesRef.current.filter((img) => img.id !== imageId);
+        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, updatedImages);
+    }, []);
     const deleteSelected = React.useCallback(() => {
         if (selectedId) {
             deleteImage(selectedId);
         }
     }, [selectedId, deleteImage]);
     const bringToFront = React.useCallback((imageId) => {
+        var _a;
+        const images = imagesRef.current;
         const image = images.find((img) => img.id === imageId);
         if (!image)
             return;
         const others = images.filter((img) => img.id !== imageId);
-        onChange === null || onChange === void 0 ? void 0 : onChange([...others, image]);
-    }, [images, onChange]);
+        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, [...others, image]);
+    }, []);
     const sendToBack = React.useCallback((imageId) => {
+        var _a;
+        const images = imagesRef.current;
         const image = images.find((img) => img.id === imageId);
         if (!image)
             return;
         const others = images.filter((img) => img.id !== imageId);
-        onChange === null || onChange === void 0 ? void 0 : onChange([image, ...others]);
-    }, [images, onChange]);
+        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, [image, ...others]);
+    }, []);
     const reorderImage = React.useCallback((fromIndex, toIndex) => {
+        var _a;
+        const images = imagesRef.current;
         if (fromIndex < 0 || fromIndex >= images.length)
             return;
         if (toIndex < 0 || toIndex >= images.length)
@@ -326,8 +348,8 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         const newImages = [...images];
         const [moved] = newImages.splice(fromIndex, 1);
         newImages.splice(toIndex, 0, moved);
-        onChange === null || onChange === void 0 ? void 0 : onChange(newImages);
-    }, [images, onChange]);
+        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, newImages);
+    }, []);
     return {
         selectedId,
         isDragging,
