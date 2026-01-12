@@ -1,0 +1,143 @@
+import * as react_jsx_runtime from 'react/jsx-runtime';
+import * as React$1 from 'react';
+import React__default from 'react';
+
+interface Position {
+    x: number;
+    y: number;
+}
+interface Size {
+    width: number;
+    height: number;
+}
+interface ImageTransform {
+    position: Position;
+    size: Size;
+    rotation: number;
+}
+interface ImageData {
+    id: string;
+    src: string;
+    naturalWidth: number;
+    naturalHeight: number;
+    transform: ImageTransform;
+}
+interface BoundingBox {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+}
+interface EditorConfig {
+    /** Width of the editor canvas */
+    width: number;
+    /** Height of the editor canvas */
+    height: number;
+    /** Printable area boundaries (where images can be placed) */
+    printableArea?: BoundingBox;
+    /** Minimum image size in pixels */
+    minImageSize?: number;
+    /** Maximum image size in pixels */
+    maxImageSize?: number;
+    /** Whether to allow rotation */
+    allowRotation?: boolean;
+    /** Accepted file types for upload */
+    acceptedFileTypes?: string[];
+    /** Maximum file size in bytes */
+    maxFileSize?: number;
+}
+interface TShirtBuilderProps {
+    /** Background image (e.g., t-shirt template) */
+    backgroundImage?: string;
+    /** Editor configuration */
+    config?: Partial<EditorConfig>;
+    /** Callback when images change */
+    onChange?: (images: ImageData[]) => void;
+    /** Callback when export is requested */
+    onExport?: (dataUrl: string) => void;
+    /** Custom class name */
+    className?: string;
+    /** Custom styles */
+    style?: React.CSSProperties;
+    /** Initial images for controlled mode */
+    initialImages?: ImageData[];
+}
+interface ControlHandle {
+    position: 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's' | 'e' | 'w' | 'rotate';
+    cursor: string;
+}
+type DragMode = 'move' | 'resize' | 'rotate' | null;
+interface DragState {
+    mode: DragMode;
+    imageId: string;
+    startPosition: Position;
+    startTransform: ImageTransform;
+    handle?: ControlHandle['position'];
+}
+
+declare function TShirtBuilder({ backgroundImage, config: configProp, onChange, onExport, className, style, initialImages, }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
+
+interface ControlsProps {
+    transform: ImageTransform;
+    allowRotation: boolean;
+    onMouseDown: (event: React__default.MouseEvent, mode: DragMode, handle?: ControlHandle['position']) => void;
+}
+declare function Controls({ transform, allowRotation, onMouseDown }: ControlsProps): react_jsx_runtime.JSX.Element;
+
+interface ToolbarProps {
+    imageCount: number;
+    hasSelection: boolean;
+    onUploadClick: () => void;
+    onRemoveClick: () => void;
+    onRemoveAllClick: () => void;
+    onExportClick?: () => void;
+}
+declare function Toolbar({ imageCount, hasSelection, onUploadClick, onRemoveClick, onRemoveAllClick, onExportClick, }: ToolbarProps): react_jsx_runtime.JSX.Element;
+
+interface LayerPanelProps {
+    images: ImageData[];
+    selectedId: string | null;
+    onSelect: (id: string) => void;
+    onDelete: (id: string) => void;
+    onReorder: (fromIndex: number, toIndex: number) => void;
+}
+declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, }: LayerPanelProps): react_jsx_runtime.JSX.Element;
+
+interface UseImageUploadOptions {
+    config: EditorConfig;
+    onImageLoad: (imageData: ImageData) => void;
+    onError?: (error: string) => void;
+}
+declare function useImageUpload({ config, onImageLoad, onError }: UseImageUploadOptions): {
+    inputRef: React$1.RefObject<HTMLInputElement>;
+    handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    handleDrop: (event: React.DragEvent) => void;
+    handleDragOver: (event: React.DragEvent) => void;
+    openFilePicker: () => void;
+    acceptedTypes: string[];
+};
+
+interface UseImageTransformOptions {
+    images: ImageData[];
+    config: EditorConfig;
+    onChange?: (images: ImageData[]) => void;
+}
+declare function useImageTransform({ images, config, onChange }: UseImageTransformOptions): {
+    selectedId: string | null;
+    isDragging: boolean;
+    handleMouseDown: (event: React.MouseEvent, imageId: string, mode: DragMode, handle?: ControlHandle["position"]) => void;
+    selectImage: (imageId: string | null) => void;
+    deselectAll: () => void;
+    deleteImage: (imageId: string) => void;
+    deleteSelected: () => void;
+    bringToFront: (imageId: string) => void;
+    sendToBack: (imageId: string) => void;
+    reorderImage: (fromIndex: number, toIndex: number) => void;
+    updateImageTransform: (imageId: string, newTransform: ImageTransform) => void;
+};
+
+declare function exportToDataUrl(canvas: HTMLCanvasElement, backgroundImage: HTMLImageElement | null, images: ImageData[], config: EditorConfig, format?: 'image/png' | 'image/jpeg', quality?: number): string;
+declare function createOffscreenCanvas(width: number, height: number): HTMLCanvasElement;
+
+export { Controls, LayerPanel, TShirtBuilder, Toolbar, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload };
+export type { BoundingBox, ControlHandle, DragMode, DragState, EditorConfig, ImageData, ImageTransform, Position, Size, TShirtBuilderProps };

@@ -3,8 +3,8 @@ example/
 # Dependencies
 node_modules/
 
-# Build output
-dist/
+# Build output (dist/ is committed for GitHub installs)
+# dist/
 
 # IDE
 .idea/
