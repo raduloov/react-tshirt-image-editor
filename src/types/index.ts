@@ -48,7 +48,7 @@ export interface EditorConfig {
   maxFileSize?: number;
 }
 
-export interface ImageEditorProps {
+export interface TShirtBuilderProps {
   /** Background image (e.g., t-shirt template) */
   backgroundImage?: string;
   /** Editor configuration */

@@ -1,5 +1,5 @@
 // Components
-export { ImageEditor } from './components/ImageEditor';
+export { TShirtBuilder } from './components/TShirtBuilder';
 export { Controls } from './components/Controls';
 export { Toolbar } from './components/Toolbar';
 export { LayerPanel } from './components/LayerPanel';
@@ -19,7 +19,7 @@ export type {
   ImageData,
   BoundingBox,
   EditorConfig,
-  ImageEditorProps,
+  TShirtBuilderProps,
   ControlHandle,
   DragMode,
   DragState,

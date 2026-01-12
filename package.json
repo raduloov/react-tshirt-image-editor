@@ -1,5 +1,5 @@
 {
-  "name": "react-tshirt-image-editor",
+  "name": "react-tshirt-builder",
   "version": "1.0.2",
   "type": "module",
   "description": "A React component for uploading, positioning, and resizing images on t-shirt templates",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/raduloov/react-tshirt-image-editor.git"
+    "url": "https://github.com/raduloov/react-tshirt-builder.git"
   },
   "keywords": [
     "react",

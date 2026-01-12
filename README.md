@@ -1,4 +1,4 @@
-# react-tshirt-image-editor
+# react-tshirt-builder
 
 A React component for uploading, positioning, and resizing images on t-shirt templates (or any background).
 
@@ -15,18 +15,18 @@ A React component for uploading, positioning, and resizing images on t-shirt tem
 ## Installation
 
 ```bash
-npm install react-tshirt-image-editor
+npm install react-tshirt-builder
 # or
-yarn add react-tshirt-image-editor
+yarn add react-tshirt-builder
 ```
 
 ### Install from GitHub (before npm publish)
 
 ```bash
-npm install github:yourusername/react-tshirt-image-editor
+npm install github:yourusername/react-tshirt-builder
 # or in package.json
 "dependencies": {
-  "react-tshirt-image-editor": "github:yourusername/react-tshirt-image-editor"
+  "react-tshirt-builder": "github:yourusername/react-tshirt-builder"
 }
 ```
 
@@ -35,11 +35,11 @@ npm install github:yourusername/react-tshirt-image-editor
 ### Basic Usage
 
 ```tsx
-import { ImageEditor } from 'react-tshirt-image-editor';
+import { TShirtBuilder } from 'react-tshirt-builder';
 
 function App() {
   return (
-    <ImageEditor
+    <TShirtBuilder
       backgroundImage="/path/to/tshirt-template.png"
       onChange={(imageData) => {
         console.log('Image updated:', imageData);
@@ -52,7 +52,7 @@ function App() {
 ### With Configuration
 
 ```tsx
-import { ImageEditor, ImageData } from 'react-tshirt-image-editor';
+import { TShirtBuilder, ImageData } from 'react-tshirt-builder';
 
 function TShirtCustomizer() {
   const handleChange = (imageData: ImageData | null) => {
@@ -71,7 +71,7 @@ function TShirtCustomizer() {
   };
 
   return (
-    <ImageEditor
+    <TShirtBuilder
       backgroundImage="/tshirt-white.png"
       config={{
         width: 400,
@@ -98,7 +98,7 @@ function TShirtCustomizer() {
 ### Using Individual Hooks
 
 ```tsx
-import { useImageUpload, useImageTransform } from 'react-tshirt-image-editor';
+import { useImageUpload, useImageTransform } from 'react-tshirt-builder';
 
 function CustomEditor() {
   const [imageData, setImageData] = useState(null);
@@ -126,7 +126,7 @@ function CustomEditor() {
 
 ## Props
 
-### ImageEditorProps
+### TShirtBuilderProps
 
 | Prop | Type | Description |
 |------|------|-------------|

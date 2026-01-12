@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import type { ImageEditorProps, ImageData, EditorConfig } from '../types';
+import type { TShirtBuilderProps, ImageData, EditorConfig } from '../types';
 import { useImageUpload } from '../hooks/useImageUpload';
 import { useImageTransform } from '../hooks/useImageTransform';
 import { Controls } from './Controls';
@@ -17,7 +17,7 @@ const DEFAULT_CONFIG: EditorConfig = {
   maxFileSize: 10 * 1024 * 1024,
 };
 
-export function ImageEditor({
+export function TShirtBuilder({
   backgroundImage,
   config: configProp,
   onChange,
@@ -25,7 +25,7 @@ export function ImageEditor({
   className,
   style,
   initialImages,
-}: ImageEditorProps) {
+}: TShirtBuilderProps) {
   const config: EditorConfig = { ...DEFAULT_CONFIG, ...configProp };
 
   const [images, setImages] = useState<ImageData[]>(initialImages || []);
