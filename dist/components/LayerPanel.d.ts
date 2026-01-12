@@ -1,4 +1,4 @@
-import type { ImageData, TShirtView } from '../types';
+import type { ImageData, TShirtView } from "../types";
 interface LayerPanelProps {
     images: ImageData[];
     selectedId: string | null;
@@ -9,5 +9,5 @@ interface LayerPanelProps {
     currentView: TShirtView;
     onViewChange: (view: TShirtView) => void;
 }
-export declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, }: LayerPanelProps): import("react/jsx-runtime").JSX.Element;
+export declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange }: LayerPanelProps): import("react/jsx-runtime").JSX.Element;
 export {};

@@ -13,12 +13,12 @@ function useImageUpload({ config, onImageLoad, onError }) {
     const processFile = useCallback((file) => {
         // Validate file type
         if (!acceptedTypes.includes(file.type)) {
-            onError === null || onError === void 0 ? void 0 : onError(`Invalid file type. Accepted: ${acceptedTypes.join(', ')}`);
+            onError === null || onError === void 0 ? void 0 : onError(`Невалиден тип файл. Позволени: ${acceptedTypes.join(', ')}`);
             return;
         }
         // Validate file size
         if (file.size > maxFileSize) {
-            onError === null || onError === void 0 ? void 0 : onError(`File too large. Maximum size: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
+            onError === null || onError === void 0 ? void 0 : onError(`Файлът е твърде голям. Максимален размер: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
             return;
         }
         const reader = new FileReader();
@@ -67,12 +67,12 @@ function useImageUpload({ config, onImageLoad, onError }) {
                 });
             };
             img.onerror = () => {
-                onError === null || onError === void 0 ? void 0 : onError('Failed to load image');
+                onError === null || onError === void 0 ? void 0 : onError('Грешка при зареждане на изображението');
             };
             img.src = src;
         };
         reader.onerror = () => {
-            onError === null || onError === void 0 ? void 0 : onError('Failed to read file');
+            onError === null || onError === void 0 ? void 0 : onError('Грешка при четене на файла');
         };
         reader.readAsDataURL(file);
     }, [acceptedTypes, maxFileSize, config, onImageLoad, onError]);
@@ -411,103 +411,103 @@ function Controls({ transform, allowRotation, onMouseDown }) {
 
 const ITEM_HEIGHT = 56; // Height of each layer item in pixels
 // teniski-varna color palette
-const COLORS$2 = {
-    ACCENT: '#FAC000',
-    BLACK: '#000000',
-    WHITE: '#FFFFFF',
-    GRAY: '#9B9B9B',
-    LIGHT_GRAY: '#F7F7F7',
-    DARK_GRAY: '#4A4A4A',
-    RED: '#FF0000',
+const COLORS$1 = {
+    ACCENT: "#FAC000",
+    BLACK: "#000000",
+    WHITE: "#FFFFFF",
+    GRAY: "#9B9B9B",
+    LIGHT_GRAY: "#F7F7F7",
+    DARK_GRAY: "#4A4A4A",
+    RED: "#FF0000"
 };
 const panelStyle = {
-    width: '220px',
-    backgroundColor: COLORS$2.WHITE,
-    borderRadius: '10px',
-    overflow: 'hidden',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-    fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
+    width: "220px",
+    backgroundColor: COLORS$1.WHITE,
+    borderRadius: "10px",
+    overflow: "hidden",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+    fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
 };
 const headerStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '8px',
-    borderBottom: `1px solid ${COLORS$2.LIGHT_GRAY}`,
+    display: "flex",
+    alignItems: "center",
+    padding: "8px",
+    borderBottom: `1px solid ${COLORS$1.LIGHT_GRAY}`
 };
 const viewToggleContainerStyle = {
-    display: 'flex',
-    width: '100%',
-    backgroundColor: COLORS$2.LIGHT_GRAY,
-    borderRadius: '8px',
-    padding: '4px',
+    display: "flex",
+    width: "100%",
+    backgroundColor: COLORS$1.LIGHT_GRAY,
+    borderRadius: "8px",
+    padding: "4px"
 };
 const getViewButtonStyle = (isActive) => ({
     flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    padding: '10px 12px',
-    border: 'none',
-    borderRadius: '6px',
-    backgroundColor: isActive ? COLORS$2.WHITE : 'transparent',
-    color: isActive ? COLORS$2.DARK_GRAY : COLORS$2.GRAY,
-    fontSize: '13px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    padding: "10px 12px",
+    border: "none",
+    borderRadius: "6px",
+    backgroundColor: isActive ? COLORS$1.WHITE : "transparent",
+    color: isActive ? COLORS$1.DARK_GRAY : COLORS$1.GRAY,
+    fontSize: "13px",
     fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s ease-out',
-    boxShadow: isActive ? '0 2px 4px rgba(0, 0, 0, 0.08)' : 'none',
+    cursor: "pointer",
+    transition: "all 0.2s ease-out",
+    boxShadow: isActive ? "0 2px 4px rgba(0, 0, 0, 0.08)" : "none"
 });
 const listStyle = {
-    listStyle: 'none',
+    listStyle: "none",
     margin: 0,
-    padding: '8px',
-    maxHeight: '320px',
-    overflowY: 'auto',
-    position: 'relative',
+    padding: "8px",
+    maxHeight: "320px",
+    overflowY: "auto",
+    position: "relative"
 };
 const emptyStyle = {
-    padding: '32px 20px',
-    textAlign: 'center',
-    color: COLORS$2.GRAY,
-    fontSize: '13px',
+    padding: "32px 20px",
+    textAlign: "center",
+    color: COLORS$1.GRAY,
+    fontSize: "13px"
 };
 const dragHandleStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '3px',
-    cursor: 'grab',
-    padding: '6px 4px',
-    borderRadius: '4px',
-    transition: 'background-color 0.3s ease-out',
+    display: "flex",
+    flexDirection: "column",
+    gap: "3px",
+    cursor: "grab",
+    padding: "6px 4px",
+    borderRadius: "4px",
+    transition: "background-color 0.3s ease-out"
 };
 const dragLineStyle = {
-    width: '10px',
-    height: '2px',
-    backgroundColor: COLORS$2.GRAY,
-    borderRadius: '1px',
+    width: "10px",
+    height: "2px",
+    backgroundColor: COLORS$1.GRAY,
+    borderRadius: "1px"
 };
 // Plus icon for add button
-const PlusIcon$1 = () => (jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M8 3v10M3 8h10", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" }) }));
+const PlusIcon = () => (jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M8 3v10M3 8h10", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" }) }));
 const addButtonStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    width: '100%',
-    padding: '12px 16px',
-    margin: '8px 0',
-    backgroundColor: COLORS$2.ACCENT,
-    color: COLORS$2.BLACK,
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '14px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    width: "100%",
+    padding: "12px 16px",
+    margin: "8px 0",
+    backgroundColor: COLORS$1.ACCENT,
+    color: COLORS$1.BLACK,
+    border: "none",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontSize: "14px",
     fontWeight: 600,
-    boxShadow: '0 2px 10px rgba(250, 192, 0, 0.3)',
-    transition: 'all 0.3s ease-out',
+    boxShadow: "0 2px 10px rgba(250, 192, 0, 0.3)",
+    transition: "filter 0.1s ease-out, transform 0.1s ease-out"
 };
-function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, }) {
+function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange }) {
     const [dragState, setDragState] = useState(null);
     const listRef = useRef(null);
     // Reverse to show top layer first (last in array = top = first in list)
@@ -518,16 +518,18 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
         setDragState({
             draggingIndex: reversedIndex,
             startY: e.clientY,
-            currentY: e.clientY,
+            currentY: e.clientY
         });
     }, []);
     const handleMouseMove = useCallback((e) => {
         if (!dragState)
             return;
-        setDragState(prev => prev ? {
-            ...prev,
-            currentY: e.clientY,
-        } : null);
+        setDragState(prev => prev
+            ? {
+                ...prev,
+                currentY: e.clientY
+            }
+            : null);
     }, [dragState]);
     const handleMouseUp = useCallback(() => {
         if (!dragState)
@@ -545,11 +547,11 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
     }, [dragState, reversedImages.length, images.length, onReorder]);
     useEffect(() => {
         if (dragState) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener("mousemove", handleMouseMove);
+            window.addEventListener("mouseup", handleMouseUp);
             return () => {
-                window.removeEventListener('mousemove', handleMouseMove);
-                window.removeEventListener('mouseup', handleMouseUp);
+                window.removeEventListener("mousemove", handleMouseMove);
+                window.removeEventListener("mouseup", handleMouseUp);
             };
         }
     }, [dragState, handleMouseMove, handleMouseUp]);
@@ -560,20 +562,20 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
     // Calculate visual positions during drag
     const getItemStyle = (reversedIndex, isSelected) => {
         const isDragging = (dragState === null || dragState === void 0 ? void 0 : dragState.draggingIndex) === reversedIndex;
-        let transform = 'translateY(0)';
+        let transform = "translateY(0)";
         let zIndex = 1;
         let boxShadow = isSelected
-            ? `0 0 0 2px ${COLORS$2.ACCENT}, 0 2px 10px rgba(250, 192, 0, 0.15)`
-            : '0 1px 3px rgba(0, 0, 0, 0.05)';
-        let transition = 'transform 0.3s ease-out, background-color 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out';
+            ? `0 0 0 2px ${COLORS$1.ACCENT}, 0 2px 10px rgba(250, 192, 0, 0.15)`
+            : "0 1px 3px rgba(0, 0, 0, 0.05)";
+        let transition = "transform 0.3s ease-out, background-color 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out";
         if (dragState) {
             if (isDragging) {
                 // The dragged item follows the mouse
                 const deltaY = dragState.currentY - dragState.startY;
                 transform = `translateY(${deltaY}px) scale(1.02)`;
                 zIndex = 100;
-                boxShadow = '0 8px 24px rgba(0,0,0,0.15), 0 4px 8px rgba(0, 0, 0, 0.1)';
-                transition = 'box-shadow 0.3s ease-out';
+                boxShadow = "0 8px 24px rgba(0,0,0,0.15), 0 4px 8px rgba(0, 0, 0, 0.1)";
+                transition = "box-shadow 0.3s ease-out";
             }
             else {
                 // Other items shift to make room
@@ -592,87 +594,96 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
             }
         }
         return {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '10px 12px',
-            marginBottom: '6px',
-            borderRadius: '10px',
-            border: `1px solid ${isSelected ? COLORS$2.ACCENT : COLORS$2.LIGHT_GRAY}`,
-            backgroundColor: isDragging ? COLORS$2.WHITE : isSelected ? '#FEF9E7' : COLORS$2.WHITE,
-            cursor: 'pointer',
-            position: 'relative',
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "10px 12px",
+            marginBottom: "6px",
+            borderRadius: "10px",
+            border: `1px solid ${isSelected ? COLORS$1.ACCENT : COLORS$1.LIGHT_GRAY}`,
+            backgroundColor: isDragging ? COLORS$1.WHITE : isSelected ? "#FEF9E7" : COLORS$1.WHITE,
+            cursor: "pointer",
+            position: "relative",
             zIndex,
             transform,
             transition,
             boxShadow,
             height: `${ITEM_HEIGHT}px`,
-            boxSizing: 'border-box',
+            boxSizing: "border-box"
         };
     };
     const thumbnailStyle = {
-        width: '36px',
-        height: '36px',
-        objectFit: 'contain',
-        backgroundColor: COLORS$2.LIGHT_GRAY,
-        borderRadius: '8px',
-        border: `1px solid ${COLORS$2.LIGHT_GRAY}`,
-        padding: '2px',
+        width: "36px",
+        height: "36px",
+        objectFit: "contain",
+        backgroundColor: COLORS$1.LIGHT_GRAY,
+        borderRadius: "8px",
+        border: `1px solid ${COLORS$1.LIGHT_GRAY}`,
+        padding: "2px"
     };
     const labelStyle = {
         flex: 1,
-        fontSize: '13px',
+        fontSize: "13px",
         fontWeight: 500,
-        color: COLORS$2.DARK_GRAY,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
+        color: COLORS$1.DARK_GRAY,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
     };
     const deleteButtonStyle = {
-        width: '28px',
-        height: '28px',
+        width: "28px",
+        height: "28px",
         padding: 0,
-        border: 'none',
-        borderRadius: '50%',
-        backgroundColor: 'transparent',
-        color: COLORS$2.GRAY,
-        cursor: 'pointer',
-        fontSize: '16px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.3s ease-out',
+        border: "none",
+        borderRadius: "50%",
+        backgroundColor: "transparent",
+        color: COLORS$1.GRAY,
+        cursor: "pointer",
+        fontSize: "16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.3s ease-out"
     };
     const deleteButtonHoverStyle = {
         ...deleteButtonStyle,
-        backgroundColor: '#FFEBEB',
-        color: COLORS$2.RED,
-        transform: 'scale(1.1)',
+        backgroundColor: "#FFEBEB",
+        color: COLORS$1.RED,
+        transform: "scale(1.1)"
     };
     // Delete button with hover state
     const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
     const [addButtonHovered, setAddButtonHovered] = useState(false);
+    const [addButtonActive, setAddButtonActive] = useState(false);
     // Front icon
     const FrontIcon = () => (jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsx("path", { d: "M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsx("circle", { cx: "12", cy: "7", r: "4", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })] }));
     // Back icon
     const BackIcon = () => (jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsx("path", { d: "M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsx("circle", { cx: "12", cy: "7", r: "4", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsx("path", { d: "M3 3l18 18", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" })] }));
-    return (jsxs("div", { style: panelStyle, children: [jsx("div", { style: headerStyle, children: jsxs("div", { style: viewToggleContainerStyle, children: [jsxs("button", { style: getViewButtonStyle(currentView === 'front'), onClick: () => onViewChange('front'), children: [jsx(FrontIcon, {}), "Front"] }), jsxs("button", { style: getViewButtonStyle(currentView === 'back'), onClick: () => onViewChange('back'), children: [jsx(BackIcon, {}), "Back"] })] }) }), jsx("div", { style: { padding: '12px 12px 4px' }, children: jsxs("button", { style: {
+    return (jsxs("div", { style: panelStyle, children: [jsx("div", { style: headerStyle, children: jsxs("div", { style: viewToggleContainerStyle, children: [jsxs("button", { style: getViewButtonStyle(currentView === "front"), onClick: () => onViewChange("front"), children: [jsx(FrontIcon, {}), "\u041E\u0442\u043F\u0440\u0435\u0434"] }), jsxs("button", { style: getViewButtonStyle(currentView === "back"), onClick: () => onViewChange("back"), children: [jsx(BackIcon, {}), "\u041E\u0442\u0437\u0430\u0434"] })] }) }), jsx("div", { style: { padding: "12px 12px 4px" }, children: jsxs("button", { style: {
                         ...addButtonStyle,
                         margin: 0,
-                        ...(addButtonHovered ? {
-                            filter: 'brightness(1.1)',
-                            boxShadow: '0 4px 15px rgba(250, 192, 0, 0.4)',
-                            transform: 'scale(1.02)',
-                        } : {}),
-                    }, onClick: onAddImage, onMouseEnter: () => setAddButtonHovered(true), onMouseLeave: () => setAddButtonHovered(false), children: [jsx(PlusIcon$1, {}), "Add Image"] }) }), images.length === 0 ? (jsxs("div", { style: emptyStyle, children: [jsx("div", { style: { marginBottom: '4px', opacity: 0.6 }, children: jsxs("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsx("path", { d: "M8 1L1 4.5L8 8L15 4.5L8 1Z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsx("path", { d: "M1 11.5L8 15L15 11.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsx("path", { d: "M1 8L8 11.5L15 8", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" })] }) }), "No layers yet"] })) : (jsx("ul", { ref: listRef, style: listStyle, children: reversedImages.map((image, reversedIndex) => {
+                        ...(addButtonActive
+                            ? {
+                                filter: "brightness(0.9)",
+                                transform: "scale(0.95)"
+                            }
+                            : addButtonHovered
+                                ? {
+                                    filter: "brightness(0.9)"
+                                }
+                                : {})
+                    }, onClick: onAddImage, onMouseEnter: () => setAddButtonHovered(true), onMouseLeave: () => {
+                        setAddButtonHovered(false);
+                        setAddButtonActive(false);
+                    }, onMouseDown: () => setAddButtonActive(true), onMouseUp: () => setAddButtonActive(false), children: [jsx(PlusIcon, {}), "\u0414\u043E\u0431\u0430\u0432\u0438 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435"] }) }), images.length === 0 ? (jsxs("div", { style: emptyStyle, children: [jsx("div", { style: { marginBottom: "4px", opacity: 0.6 }, children: jsxs("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsx("path", { d: "M8 1L1 4.5L8 8L15 4.5L8 1Z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsx("path", { d: "M1 11.5L8 15L15 11.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsx("path", { d: "M1 8L8 11.5L15 8", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" })] }) }), "\u041D\u044F\u043C\u0430 \u0441\u043B\u043E\u0435\u0432\u0435"] })) : (jsx("ul", { ref: listRef, style: listStyle, children: reversedImages.map((image, reversedIndex) => {
                     const originalIndex = images.length - 1 - reversedIndex;
                     const isSelected = image.id === selectedId;
                     const isDragging = (dragState === null || dragState === void 0 ? void 0 : dragState.draggingIndex) === reversedIndex;
                     return (jsxs("li", { style: getItemStyle(reversedIndex, isSelected), onClick: () => !dragState && onSelect(image.id), children: [jsxs("div", { style: {
                                     ...dragHandleStyle,
-                                    cursor: isDragging ? 'grabbing' : 'grab',
-                                    backgroundColor: isDragging ? '#e2e8f0' : 'transparent',
-                                }, onMouseDown: (e) => handleMouseDown(e, reversedIndex), children: [jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle })] }), jsx("img", { src: image.src, alt: `Layer ${originalIndex + 1}`, style: thumbnailStyle, draggable: false }), jsxs("span", { style: labelStyle, children: ["Layer ", originalIndex + 1] }), jsx("button", { style: hoveredDeleteId === image.id ? deleteButtonHoverStyle : deleteButtonStyle, onClick: (e) => handleDelete(e, image.id), onMouseEnter: () => setHoveredDeleteId(image.id), onMouseLeave: () => setHoveredDeleteId(null), title: "Delete layer", children: jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }) })] }, image.id));
+                                    cursor: isDragging ? "grabbing" : "grab",
+                                    backgroundColor: isDragging ? "#e2e8f0" : "transparent"
+                                }, onMouseDown: e => handleMouseDown(e, reversedIndex), children: [jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle })] }), jsx("img", { src: image.src, alt: `Layer ${originalIndex + 1}`, style: thumbnailStyle, draggable: false }), jsxs("span", { style: labelStyle, children: ["\u0421\u043B\u043E\u0439 ", originalIndex + 1] }), jsx("button", { style: hoveredDeleteId === image.id ? deleteButtonHoverStyle : deleteButtonStyle, onClick: e => handleDelete(e, image.id), onMouseEnter: () => setHoveredDeleteId(image.id), onMouseLeave: () => setHoveredDeleteId(null), title: "\u0418\u0437\u0442\u0440\u0438\u0439 \u0441\u043B\u043E\u0439", children: jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }) })] }, image.id));
                 }) }))] }));
 }
 
@@ -725,13 +736,13 @@ function createOffscreenCanvas(width, height) {
 }
 
 // teniski-varna color palette
-const COLORS$1 = {
-    ACCENT: '#FAC000',
-    BLACK: '#000000',
-    GRAY: '#9B9B9B',
-    LIGHT_GRAY: '#F7F7F7',
-    DARK_GRAY: '#4A4A4A',
-    RED: '#FF0000',
+const COLORS = {
+    ACCENT: "#FAC000",
+    BLACK: "#000000",
+    GRAY: "#9B9B9B",
+    LIGHT_GRAY: "#F7F7F7",
+    DARK_GRAY: "#4A4A4A",
+    RED: "#FF0000"
 };
 const DEFAULT_CONFIG = {
     width: 400,
@@ -739,12 +750,12 @@ const DEFAULT_CONFIG = {
     minImageSize: 20,
     maxImageSize: 800,
     allowRotation: false,
-    acceptedFileTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
-    maxFileSize: 10 * 1024 * 1024,
+    acceptedFileTypes: ["image/png", "image/jpeg", "image/webp", "image/gif"],
+    maxFileSize: 10 * 1024 * 1024
 };
-function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages, }) {
+function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }) {
     const config = { ...DEFAULT_CONFIG, ...configProp };
-    const [currentView, setCurrentView] = useState('front');
+    const [currentView, setCurrentView] = useState("front");
     const [viewImages, setViewImages] = useState(initialImages || { front: [], back: [] });
     const [bgImage, setBgImage] = useState(null);
     const [error, setError] = useState(null);
@@ -752,13 +763,13 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
     // Get current images based on view
     const images = viewImages[currentView];
     // Get current background image URL based on view
-    const currentBackgroundUrl = currentView === 'front' ? frontBgImage : backBgImage;
+    const currentBackgroundUrl = currentView === "front" ? frontBgImage : backBgImage;
     // Load background image based on current view
     useEffect(() => {
         if (currentBackgroundUrl) {
             const img = new Image();
             img.onload = () => setBgImage(img);
-            img.onerror = () => setError('Failed to load background image');
+            img.onerror = () => setError("Грешка при зареждане на изображението");
             img.src = currentBackgroundUrl;
         }
         else {
@@ -766,14 +777,14 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
         }
     }, [currentBackgroundUrl]);
     const handleImagesChange = useCallback((newImages) => {
-        setViewImages((prev) => {
+        setViewImages(prev => {
             const updated = { ...prev, [currentView]: newImages };
             onChange === null || onChange === void 0 ? void 0 : onChange(updated, currentView);
             return updated;
         });
     }, [onChange, currentView]);
     const handleImageLoad = useCallback((newImageData) => {
-        setViewImages((prev) => {
+        setViewImages(prev => {
             const newImages = [...prev[currentView], newImageData];
             const updated = { ...prev, [currentView]: newImages };
             onChange === null || onChange === void 0 ? void 0 : onChange(updated, currentView);
@@ -784,12 +795,12 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
     const { inputRef, handleFileChange, handleDrop, handleDragOver, openFilePicker, acceptedTypes } = useImageUpload({
         config,
         onImageLoad: handleImageLoad,
-        onError: setError,
+        onError: setError
     });
-    const { selectedId, isDragging, handleMouseDown, selectImage, deselectAll, deleteImage, deleteSelected, reorderImage, } = useImageTransform({
+    const { selectedId, isDragging, handleMouseDown, selectImage, deselectAll, deleteImage, deleteSelected, reorderImage } = useImageTransform({
         images,
         config,
-        onChange: handleImagesChange,
+        onChange: handleImagesChange
     });
     const handleExport = useCallback(() => {
         if (!onExport)
@@ -805,245 +816,162 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
         }
     }, [deselectAll]);
     const containerStyle = {
-        position: 'relative',
+        position: "relative",
         width: config.width,
         height: config.height,
-        backgroundColor: COLORS$1.LIGHT_GRAY,
+        backgroundColor: COLORS.LIGHT_GRAY,
         backgroundImage: bgImage ? `url(${currentBackgroundUrl})` : undefined,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        overflow: 'hidden',
-        cursor: isDragging ? 'grabbing' : 'default',
-        userSelect: 'none',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-        fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        overflow: "hidden",
+        cursor: isDragging ? "grabbing" : "default",
+        userSelect: "none",
+        borderRadius: "10px",
+        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+        fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
     };
     const dropZoneStyle = {
-        position: 'absolute',
+        position: "absolute",
         inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: '12px',
-        color: COLORS$1.GRAY,
-        fontSize: '14px',
-        pointerEvents: images.length > 0 ? 'none' : 'auto',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        gap: "12px",
+        color: COLORS.GRAY,
+        fontSize: "14px",
+        pointerEvents: images.length > 0 ? "none" : "auto"
     };
     const [exportButtonHovered, setExportButtonHovered] = useState(false);
+    const [exportButtonActive, setExportButtonActive] = useState(false);
     const exportButtonStyle = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        width: '100%',
-        padding: '14px 20px',
-        marginTop: '12px',
-        backgroundColor: COLORS$1.ACCENT,
-        color: COLORS$1.BLACK,
-        border: 'none',
-        borderRadius: '10px',
-        cursor: 'pointer',
-        fontSize: '16px',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+        width: "100%",
+        padding: "14px 20px",
+        marginTop: "12px",
+        backgroundColor: COLORS.ACCENT,
+        color: COLORS.BLACK,
+        border: "none",
+        borderRadius: "10px",
+        cursor: "pointer",
+        fontSize: "16px",
         fontWeight: 600,
-        boxShadow: '0 2px 10px rgba(250, 192, 0, 0.3)',
-        transition: 'all 0.3s ease-out',
-        ...(exportButtonHovered ? {
-            filter: 'brightness(1.1)',
-            boxShadow: '0 4px 15px rgba(250, 192, 0, 0.4)',
-            transform: 'scale(1.02)',
-        } : {}),
+        boxShadow: "0 2px 10px rgba(250, 192, 0, 0.3)",
+        transition: "filter 0.1s ease-out, transform 0.1s ease-out",
+        ...(exportButtonActive
+            ? {
+                filter: "brightness(0.9)",
+                transform: "scale(0.95)"
+            }
+            : exportButtonHovered
+                ? {
+                    filter: "brightness(0.9)"
+                }
+                : {})
     };
     return (jsxs("div", { className: className, style: style, children: [error && (jsxs("div", { style: {
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '12px 16px',
-                    marginBottom: '12px',
-                    backgroundColor: '#FFEBEB',
-                    color: COLORS$1.RED,
-                    borderRadius: '10px',
-                    fontSize: '13px',
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "12px 16px",
+                    marginBottom: "12px",
+                    backgroundColor: "#FFEBEB",
+                    color: COLORS.RED,
+                    borderRadius: "10px",
+                    fontSize: "13px",
                     fontWeight: 500,
-                    boxShadow: '0 2px 10px rgba(255, 0, 0, 0.1)',
-                }, children: [jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M8 5.333V8M8 10.667h.007M14.667 8A6.667 6.667 0 111.333 8a6.667 6.667 0 0113.334 0z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }), error] })), jsxs("div", { style: { display: 'flex', gap: '16px' }, children: [jsx(LayerPanel, { images: images, selectedId: selectedId, onSelect: selectImage, onDelete: deleteImage, onReorder: reorderImage, onAddImage: openFilePicker, currentView: currentView, onViewChange: setCurrentView }), jsxs("div", { style: { display: 'flex', flexDirection: 'column' }, children: [jsxs("div", { ref: containerRef, style: containerStyle, onDrop: handleDrop, onDragOver: handleDragOver, onClick: handleContainerClick, children: [images.length === 0 && (jsx("div", { style: dropZoneStyle, children: jsxs("div", { style: {
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                padding: '32px',
-                                                border: `2px dashed ${COLORS$1.GRAY}`,
-                                                borderRadius: '20px',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                                maxWidth: '280px',
-                                                textAlign: 'center',
+                    boxShadow: "0 2px 10px rgba(255, 0, 0, 0.1)"
+                }, children: [jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M8 5.333V8M8 10.667h.007M14.667 8A6.667 6.667 0 111.333 8a6.667 6.667 0 0113.334 0z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }), error] })), jsxs("div", { style: { display: "flex", gap: "16px" }, children: [jsx(LayerPanel, { images: images, selectedId: selectedId, onSelect: selectImage, onDelete: deleteImage, onReorder: reorderImage, onAddImage: openFilePicker, currentView: currentView, onViewChange: setCurrentView }), jsxs("div", { style: { display: "flex", flexDirection: "column" }, children: [jsxs("div", { ref: containerRef, style: containerStyle, onDrop: handleDrop, onDragOver: handleDragOver, onClick: handleContainerClick, children: [images.length === 0 && (jsx("div", { style: dropZoneStyle, children: jsxs("div", { style: {
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                padding: "32px",
+                                                border: `2px dashed ${COLORS.GRAY}`,
+                                                borderRadius: "20px",
+                                                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                                                maxWidth: "280px",
+                                                textAlign: "center"
                                             }, children: [jsx("div", { style: {
-                                                        width: '56px',
-                                                        height: '56px',
-                                                        borderRadius: '50%',
-                                                        backgroundColor: '#FEF9E7',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        marginBottom: '16px',
-                                                        boxShadow: '0 2px 10px rgba(250, 192, 0, 0.2)',
-                                                    }, children: jsx("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z", stroke: COLORS$1.ACCENT, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }) }) }), jsx("span", { style: { fontWeight: 600, color: COLORS$1.DARK_GRAY, marginBottom: '4px' }, children: "Drop your image here" }), jsx("span", { style: { color: COLORS$1.GRAY, fontSize: '13px', marginBottom: '16px' }, children: "or click to browse" }), jsx("button", { onClick: openFilePicker, style: {
-                                                        padding: '12px 24px',
-                                                        backgroundColor: COLORS$1.ACCENT,
-                                                        color: COLORS$1.BLACK,
-                                                        border: 'none',
-                                                        borderRadius: '10px',
-                                                        cursor: 'pointer',
+                                                        width: "56px",
+                                                        height: "56px",
+                                                        borderRadius: "50%",
+                                                        backgroundColor: "#FEF9E7",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        marginBottom: "16px",
+                                                        boxShadow: "0 2px 10px rgba(250, 192, 0, 0.2)"
+                                                    }, children: jsx("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z", stroke: COLORS.ACCENT, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }) }) }), jsx("span", { style: { fontWeight: 600, color: COLORS.DARK_GRAY, marginBottom: "4px" }, children: "\u041F\u0443\u0441\u043D\u0435\u0442\u0435 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u0442\u0443\u043A" }), jsx("span", { style: { color: COLORS.GRAY, fontSize: "13px", marginBottom: "16px" }, children: "\u0438\u043B\u0438 \u043A\u043B\u0438\u043A\u043D\u0435\u0442\u0435 \u0437\u0430 \u0438\u0437\u0431\u043E\u0440" }), jsx("button", { onClick: openFilePicker, style: {
+                                                        padding: "12px 24px",
+                                                        backgroundColor: COLORS.ACCENT,
+                                                        color: COLORS.BLACK,
+                                                        border: "none",
+                                                        borderRadius: "10px",
+                                                        cursor: "pointer",
                                                         fontWeight: 600,
-                                                        fontSize: '14px',
-                                                        boxShadow: '0 2px 10px rgba(250, 192, 0, 0.3)',
-                                                        transition: 'all 0.3s ease-out',
-                                                    }, children: "Browse Files" }), jsx("span", { style: { color: COLORS$1.GRAY, fontSize: '11px', marginTop: '12px' }, children: "PNG, JPG, WebP, GIF up to 10MB" })] }) })), config.printableArea && (jsx("div", { style: {
-                                            position: 'absolute',
+                                                        fontSize: "14px",
+                                                        boxShadow: "0 2px 10px rgba(250, 192, 0, 0.3)",
+                                                        transition: "all 0.3s ease-out"
+                                                    }, children: "\u0418\u0437\u0431\u0435\u0440\u0438 \u0444\u0430\u0439\u043B" }), jsx("span", { style: { color: COLORS.GRAY, fontSize: "11px", marginTop: "12px" }, children: "PNG, JPG, WebP, GIF \u0434\u043E 10MB" })] }) })), config.printableArea && (jsx("div", { style: {
+                                            position: "absolute",
                                             left: config.printableArea.minX,
                                             top: config.printableArea.minY,
                                             width: config.printableArea.maxX - config.printableArea.minX,
                                             height: config.printableArea.maxY - config.printableArea.minY,
-                                            overflow: 'hidden',
-                                            pointerEvents: 'none',
-                                        }, children: images.map((imageData) => {
+                                            overflow: "hidden",
+                                            pointerEvents: "none"
+                                        }, children: images.map(imageData => {
                                             const { transform } = imageData;
                                             // Adjust position relative to printable area
                                             const imageStyle = {
-                                                position: 'absolute',
+                                                position: "absolute",
                                                 left: transform.position.x - config.printableArea.minX,
                                                 top: transform.position.y - config.printableArea.minY,
                                                 width: transform.size.width,
                                                 height: transform.size.height,
                                                 transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
-                                                transformOrigin: 'center center',
-                                                userSelect: 'none',
-                                                pointerEvents: 'none',
+                                                transformOrigin: "center center",
+                                                userSelect: "none",
+                                                pointerEvents: "none"
                                             };
-                                            return (jsx("img", { src: imageData.src, alt: "Uploaded design", style: imageStyle, draggable: false }, imageData.id));
-                                        }) })), images.map((imageData) => {
+                                            return (jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false }, imageData.id));
+                                        }) })), images.map(imageData => {
                                         const { transform } = imageData;
                                         const isSelected = imageData.id === selectedId;
                                         const imageStyle = {
-                                            position: 'absolute',
+                                            position: "absolute",
                                             left: transform.position.x,
                                             top: transform.position.y,
                                             width: transform.size.width,
                                             height: transform.size.height,
                                             transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
-                                            transformOrigin: 'center center',
-                                            cursor: isDragging ? 'grabbing' : 'move',
-                                            userSelect: 'none',
-                                            pointerEvents: 'auto',
-                                            opacity: config.printableArea ? 0 : 1,
+                                            transformOrigin: "center center",
+                                            cursor: isDragging ? "grabbing" : "move",
+                                            userSelect: "none",
+                                            pointerEvents: "auto",
+                                            opacity: config.printableArea ? 0 : 1
                                         };
-                                        return (jsxs(React.Fragment, { children: [jsx("img", { src: imageData.src, alt: "Uploaded design", style: imageStyle, draggable: false, onMouseDown: (e) => handleMouseDown(e, imageData.id, 'move'), onClick: (e) => {
+                                        return (jsxs(React.Fragment, { children: [jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false, onMouseDown: e => handleMouseDown(e, imageData.id, "move"), onClick: e => {
                                                         e.stopPropagation();
                                                         selectImage(imageData.id);
                                                     } }), isSelected && (jsx(Controls, { transform: transform, allowRotation: config.allowRotation || false, onMouseDown: (e, mode, handle) => handleMouseDown(e, imageData.id, mode, handle) }))] }, imageData.id));
                                     }), config.printableArea && (jsx("div", { style: {
-                                            position: 'absolute',
+                                            position: "absolute",
                                             left: config.printableArea.minX,
                                             top: config.printableArea.minY,
                                             width: config.printableArea.maxX - config.printableArea.minX,
                                             height: config.printableArea.maxY - config.printableArea.minY,
                                             border: `1.5px dashed rgba(74, 74, 74, 0.4)`,
-                                            borderRadius: '4px',
-                                            pointerEvents: 'none',
-                                        } }))] }), onExport && (jsxs("button", { style: exportButtonStyle, onClick: handleExport, onMouseEnter: () => setExportButtonHovered(true), onMouseLeave: () => setExportButtonHovered(false), children: [jsx("svg", { width: "18", height: "18", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M14 10v2.667A1.334 1.334 0 0112.667 14H3.333A1.334 1.334 0 012 12.667V10M4.667 6.667L8 3.333l3.333 3.334M8 3.333V10", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }), "Export Design"] }))] })] }), jsx("input", { ref: inputRef, type: "file", accept: acceptedTypes.join(','), onChange: handleFileChange, style: { display: 'none' } })] }));
+                                            borderRadius: "4px",
+                                            pointerEvents: "none"
+                                        } }))] }), onExport && (jsxs("button", { style: exportButtonStyle, onClick: handleExport, onMouseEnter: () => setExportButtonHovered(true), onMouseLeave: () => {
+                                    setExportButtonHovered(false);
+                                    setExportButtonActive(false);
+                                }, onMouseDown: () => setExportButtonActive(true), onMouseUp: () => setExportButtonActive(false), children: [jsx("svg", { width: "18", height: "18", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M14 10v2.667A1.334 1.334 0 0112.667 14H3.333A1.334 1.334 0 012 12.667V10M4.667 6.667L8 3.333l3.333 3.334M8 3.333V10", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }), "\u0417\u0430\u0432\u044A\u0440\u0448\u0438 \u0434\u0438\u0437\u0430\u0439\u043D"] }))] })] }), jsx("input", { ref: inputRef, type: "file", accept: acceptedTypes.join(","), onChange: handleFileChange, style: { display: "none" } })] }));
 }
 
-// teniski-varna color palette
-const COLORS = {
-    ACCENT: '#FAC000',
-    BLACK: '#000000',
-    WHITE: '#FFFFFF',
-    GRAY: '#9B9B9B',
-    LIGHT_GRAY: '#F7F7F7',
-    DARK_GRAY: '#4A4A4A',
-    RED: '#FF0000',
-};
-// SVG Icons as components
-const PlusIcon = () => (jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M8 3v10M3 8h10", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" }) }));
-const TrashIcon = () => (jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }));
-const ExportIcon = () => (jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsx("path", { d: "M14 10v2.667A1.334 1.334 0 0112.667 14H3.333A1.334 1.334 0 012 12.667V10M4.667 6.667L8 3.333l3.333 3.334M8 3.333V10", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }));
-const toolbarStyle = {
-    display: 'flex',
-    gap: '10px',
-    padding: '14px 16px',
-    backgroundColor: COLORS.WHITE,
-    borderRadius: '10px',
-    marginBottom: '12px',
-    flexWrap: 'wrap',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-    fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
-};
-const baseButtonStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '12px 20px',
-    border: 'none',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 600,
-    letterSpacing: '0.01em',
-    transition: 'all 0.3s ease-out',
-    outline: 'none',
-};
-// Primary button - gold accent (teniski-varna style)
-const primaryStyle = {
-    ...baseButtonStyle,
-    backgroundColor: COLORS.ACCENT,
-    color: COLORS.BLACK,
-    boxShadow: '0 2px 10px rgba(250, 192, 0, 0.3)',
-};
-const primaryHoverStyle = {
-    ...primaryStyle,
-    filter: 'brightness(1.1)',
-    boxShadow: '0 4px 15px rgba(250, 192, 0, 0.4)',
-    transform: 'scale(1.02)',
-};
-// Secondary button - transparent with border (teniski-varna style)
-const secondaryStyle = {
-    ...baseButtonStyle,
-    backgroundColor: 'transparent',
-    color: COLORS.DARK_GRAY,
-    border: `1px solid ${COLORS.GRAY}`,
-    boxShadow: 'none',
-};
-const secondaryHoverStyle = {
-    ...secondaryStyle,
-    backgroundColor: COLORS.LIGHT_GRAY,
-    borderColor: COLORS.DARK_GRAY,
-    transform: 'scale(1.02)',
-};
-// Danger button - for delete actions
-const dangerStyle = {
-    ...baseButtonStyle,
-    backgroundColor: COLORS.LIGHT_GRAY,
-    color: COLORS.RED,
-    boxShadow: 'none',
-};
-const dangerHoverStyle = {
-    ...dangerStyle,
-    backgroundColor: '#FFEBEB',
-    boxShadow: '0 2px 10px rgba(255, 0, 0, 0.15)',
-    transform: 'scale(1.02)',
-};
-function ToolbarButton({ children, onClick, variant, icon }) {
-    const [isHovered, setIsHovered] = useState(false);
-    const styles = {
-        primary: isHovered ? primaryHoverStyle : primaryStyle,
-        secondary: isHovered ? secondaryHoverStyle : secondaryStyle,
-        danger: isHovered ? dangerHoverStyle : dangerStyle,
-    };
-    return (jsxs("button", { style: styles[variant], onClick: onClick, onMouseEnter: () => setIsHovered(true), onMouseLeave: () => setIsHovered(false), children: [icon, children] }));
-}
-function Toolbar({ imageCount, hasSelection, onUploadClick, onRemoveClick, onRemoveAllClick, onExportClick, }) {
-    return (jsxs("div", { style: toolbarStyle, children: [jsx(ToolbarButton, { variant: "primary", onClick: onUploadClick, icon: jsx(PlusIcon, {}), children: "Add Image" }), hasSelection && (jsx(ToolbarButton, { variant: "danger", onClick: onRemoveClick, icon: jsx(TrashIcon, {}), children: "Remove Selected" })), imageCount > 0 && (jsxs(Fragment, { children: [jsx(ToolbarButton, { variant: "danger", onClick: onRemoveAllClick, icon: jsx(TrashIcon, {}), children: "Clear All" }), onExportClick && (jsx(ToolbarButton, { variant: "secondary", onClick: onExportClick, icon: jsx(ExportIcon, {}), children: "Export Design" }))] }))] }));
-}
-
-export { Controls, LayerPanel, TShirtBuilder, Toolbar, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload };
+export { Controls, LayerPanel, TShirtBuilder, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload };
 //# sourceMappingURL=index.esm.js.map

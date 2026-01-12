@@ -1,15 +1,14 @@
 // Components
-export { TShirtBuilder } from './components/TShirtBuilder';
-export { Controls } from './components/Controls';
-export { Toolbar } from './components/Toolbar';
-export { LayerPanel } from './components/LayerPanel';
+export { TShirtBuilder } from "./components/TShirtBuilder";
+export { Controls } from "./components/Controls";
+export { LayerPanel } from "./components/LayerPanel";
 
 // Hooks
-export { useImageUpload } from './hooks/useImageUpload';
-export { useImageTransform } from './hooks/useImageTransform';
+export { useImageUpload } from "./hooks/useImageUpload";
+export { useImageTransform } from "./hooks/useImageTransform";
 
 // Utils
-export { exportToDataUrl, createOffscreenCanvas } from './utils/canvas';
+export { exportToDataUrl, createOffscreenCanvas } from "./utils/canvas";
 
 // Types
 export type {
@@ -24,5 +23,5 @@ export type {
   TShirtBuilderProps,
   ControlHandle,
   DragMode,
-  DragState,
-} from './types';
+  DragState
+} from "./types";

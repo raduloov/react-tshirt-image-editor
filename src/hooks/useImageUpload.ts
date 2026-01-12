@@ -24,13 +24,13 @@ export function useImageUpload({ config, onImageLoad, onError }: UseImageUploadO
     (file: File) => {
       // Validate file type
       if (!acceptedTypes.includes(file.type)) {
-        onError?.(`Invalid file type. Accepted: ${acceptedTypes.join(', ')}`);
+        onError?.(`Невалиден тип файл. Позволени: ${acceptedTypes.join(', ')}`);
         return;
       }
 
       // Validate file size
       if (file.size > maxFileSize) {
-        onError?.(`File too large. Maximum size: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
+        onError?.(`Файлът е твърде голям. Максимален размер: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
         return;
       }
 
@@ -89,14 +89,14 @@ export function useImageUpload({ config, onImageLoad, onError }: UseImageUploadO
         };
 
         img.onerror = () => {
-          onError?.('Failed to load image');
+          onError?.('Грешка при зареждане на изображението');
         };
 
         img.src = src;
       };
 
       reader.onerror = () => {
-        onError?.('Failed to read file');
+        onError?.('Грешка при четене на файла');
       };
 
       reader.readAsDataURL(file);

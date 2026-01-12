@@ -82,7 +82,7 @@ interface DragState {
     handle?: ControlHandle['position'];
 }
 
-declare function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages, }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
+declare function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
 
 interface ControlsProps {
     transform: ImageTransform;
@@ -90,16 +90,6 @@ interface ControlsProps {
     onMouseDown: (event: React__default.MouseEvent, mode: DragMode, handle?: ControlHandle['position']) => void;
 }
 declare function Controls({ transform, allowRotation, onMouseDown }: ControlsProps): react_jsx_runtime.JSX.Element;
-
-interface ToolbarProps {
-    imageCount: number;
-    hasSelection: boolean;
-    onUploadClick: () => void;
-    onRemoveClick: () => void;
-    onRemoveAllClick: () => void;
-    onExportClick?: () => void;
-}
-declare function Toolbar({ imageCount, hasSelection, onUploadClick, onRemoveClick, onRemoveAllClick, onExportClick, }: ToolbarProps): react_jsx_runtime.JSX.Element;
 
 interface LayerPanelProps {
     images: ImageData[];
@@ -111,7 +101,7 @@ interface LayerPanelProps {
     currentView: TShirtView;
     onViewChange: (view: TShirtView) => void;
 }
-declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, }: LayerPanelProps): react_jsx_runtime.JSX.Element;
+declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange }: LayerPanelProps): react_jsx_runtime.JSX.Element;
 
 interface UseImageUploadOptions {
     config: EditorConfig;
@@ -149,5 +139,5 @@ declare function useImageTransform({ images, config, onChange }: UseImageTransfo
 declare function exportToDataUrl(canvas: HTMLCanvasElement, backgroundImage: HTMLImageElement | null, images: ImageData[], config: EditorConfig, format?: 'image/png' | 'image/jpeg', quality?: number): string;
 declare function createOffscreenCanvas(width: number, height: number): HTMLCanvasElement;
 
-export { Controls, LayerPanel, TShirtBuilder, Toolbar, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload };
+export { Controls, LayerPanel, TShirtBuilder, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload };
 export type { BoundingBox, ControlHandle, DragMode, DragState, EditorConfig, ImageData, ImageTransform, Position, Size, TShirtBuilderProps, TShirtView, ViewImages };
