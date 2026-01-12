@@ -14,8 +14,9 @@
     "dev": "rollup -c -w",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run build"
+    "prepare": "yarn build",
+    "prepublishOnly": "yarn build",
+    "postinstall": "yarn build"
   },
   "repository": {
     "type": "git",
