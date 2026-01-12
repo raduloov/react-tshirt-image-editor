@@ -17,6 +17,8 @@ export type {
   Size,
   ImageTransform,
   ImageData,
+  TShirtView,
+  ViewImages,
   BoundingBox,
   EditorConfig,
   TShirtBuilderProps,

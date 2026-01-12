@@ -22,6 +22,13 @@ export interface ImageData {
   transform: ImageTransform;
 }
 
+export type TShirtView = 'front' | 'back';
+
+export interface ViewImages {
+  front: ImageData[];
+  back: ImageData[];
+}
+
 export interface BoundingBox {
   minX: number;
   minY: number;
@@ -49,20 +56,22 @@ export interface EditorConfig {
 }
 
 export interface TShirtBuilderProps {
-  /** Background image (e.g., t-shirt template) */
-  backgroundImage?: string;
+  /** Background image for front view (e.g., t-shirt template) */
+  frontBgImage?: string;
+  /** Background image for back view */
+  backBgImage?: string;
   /** Editor configuration */
   config?: Partial<EditorConfig>;
-  /** Callback when images change */
-  onChange?: (images: ImageData[]) => void;
+  /** Callback when images change (includes both views) */
+  onChange?: (images: ViewImages, currentView: TShirtView) => void;
   /** Callback when export is requested */
-  onExport?: (dataUrl: string) => void;
+  onExport?: (dataUrl: string, view: TShirtView) => void;
   /** Custom class name */
   className?: string;
   /** Custom styles */
   style?: React.CSSProperties;
   /** Initial images for controlled mode */
-  initialImages?: ImageData[];
+  initialImages?: ViewImages;
 }
 
 export interface ControlHandle {

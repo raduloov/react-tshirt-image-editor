@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import type { ImageData } from '../types';
+import type { ImageData, TShirtView } from '../types';
 
 interface LayerPanelProps {
   images: ImageData[];
@@ -7,58 +7,132 @@ interface LayerPanelProps {
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
+  onAddImage: () => void;
+  currentView: TShirtView;
+  onViewChange: (view: TShirtView) => void;
 }
 
-const ITEM_HEIGHT = 52; // Height of each layer item in pixels
+const ITEM_HEIGHT = 56; // Height of each layer item in pixels
+
+// teniski-varna color palette
+const COLORS = {
+  ACCENT: '#FAC000',
+  BLACK: '#000000',
+  WHITE: '#FFFFFF',
+  GRAY: '#9B9B9B',
+  LIGHT_GRAY: '#F7F7F7',
+  DARK_GRAY: '#4A4A4A',
+  RED: '#FF0000',
+};
+
+// Layer icon component
+const LayerIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M1 11.5L8 15L15 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M1 8L8 11.5L15 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 const panelStyle: React.CSSProperties = {
-  width: '200px',
-  backgroundColor: '#fff',
-  border: '1px solid #e0e0e0',
-  borderRadius: '4px',
+  width: '220px',
+  backgroundColor: COLORS.WHITE,
+  borderRadius: '10px',
   overflow: 'hidden',
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+  fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
 };
 
 const headerStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  backgroundColor: '#f5f5f5',
-  borderBottom: '1px solid #e0e0e0',
-  fontSize: '12px',
-  fontWeight: 600,
-  color: '#666',
-  textTransform: 'uppercase',
+  display: 'flex',
+  alignItems: 'center',
+  padding: '8px',
+  borderBottom: `1px solid ${COLORS.LIGHT_GRAY}`,
 };
+
+const viewToggleContainerStyle: React.CSSProperties = {
+  display: 'flex',
+  width: '100%',
+  backgroundColor: COLORS.LIGHT_GRAY,
+  borderRadius: '8px',
+  padding: '4px',
+};
+
+const getViewButtonStyle = (isActive: boolean): React.CSSProperties => ({
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '6px',
+  padding: '10px 12px',
+  border: 'none',
+  borderRadius: '6px',
+  backgroundColor: isActive ? COLORS.WHITE : 'transparent',
+  color: isActive ? COLORS.DARK_GRAY : COLORS.GRAY,
+  fontSize: '13px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'all 0.2s ease-out',
+  boxShadow: isActive ? '0 2px 4px rgba(0, 0, 0, 0.08)' : 'none',
+});
 
 const listStyle: React.CSSProperties = {
   listStyle: 'none',
   margin: 0,
-  padding: 0,
-  maxHeight: '300px',
+  padding: '8px',
+  maxHeight: '320px',
   overflowY: 'auto',
   position: 'relative',
 };
 
 const emptyStyle: React.CSSProperties = {
-  padding: '20px',
+  padding: '32px 20px',
   textAlign: 'center',
-  color: '#999',
+  color: COLORS.GRAY,
   fontSize: '13px',
 };
 
 const dragHandleStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '2px',
+  gap: '3px',
   cursor: 'grab',
-  padding: '4px',
-  borderRadius: '2px',
+  padding: '6px 4px',
+  borderRadius: '4px',
+  transition: 'background-color 0.3s ease-out',
 };
 
 const dragLineStyle: React.CSSProperties = {
-  width: '12px',
+  width: '10px',
   height: '2px',
-  backgroundColor: '#999',
+  backgroundColor: COLORS.GRAY,
   borderRadius: '1px',
+};
+
+// Plus icon for add button
+const PlusIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const addButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '6px',
+  width: '100%',
+  padding: '12px 16px',
+  margin: '8px 0',
+  backgroundColor: COLORS.ACCENT,
+  color: COLORS.BLACK,
+  border: 'none',
+  borderRadius: '10px',
+  cursor: 'pointer',
+  fontSize: '14px',
+  fontWeight: 600,
+  boxShadow: '0 2px 10px rgba(250, 192, 0, 0.3)',
+  transition: 'all 0.3s ease-out',
 };
 
 export function LayerPanel({
@@ -67,6 +141,9 @@ export function LayerPanel({
   onSelect,
   onDelete,
   onReorder,
+  onAddImage,
+  currentView,
+  onViewChange,
 }: LayerPanelProps) {
   const [dragState, setDragState] = useState<{
     draggingIndex: number;
@@ -139,17 +216,19 @@ export function LayerPanel({
 
     let transform = 'translateY(0)';
     let zIndex = 1;
-    let boxShadow = 'none';
-    let transition = 'transform 0.2s ease, background-color 0.15s, box-shadow 0.2s ease';
+    let boxShadow = isSelected
+      ? `0 0 0 2px ${COLORS.ACCENT}, 0 2px 10px rgba(250, 192, 0, 0.15)`
+      : '0 1px 3px rgba(0, 0, 0, 0.05)';
+    let transition = 'transform 0.3s ease-out, background-color 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out';
 
     if (dragState) {
       if (isDragging) {
         // The dragged item follows the mouse
         const deltaY = dragState.currentY - dragState.startY;
-        transform = `translateY(${deltaY}px)`;
+        transform = `translateY(${deltaY}px) scale(1.02)`;
         zIndex = 100;
-        boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        transition = 'box-shadow 0.2s ease';
+        boxShadow = '0 8px 24px rgba(0,0,0,0.15), 0 4px 8px rgba(0, 0, 0, 0.1)';
+        transition = 'box-shadow 0.3s ease-out';
       } else {
         // Other items shift to make room
         const draggedIndex = dragState.draggingIndex;
@@ -170,10 +249,12 @@ export function LayerPanel({
     return {
       display: 'flex',
       alignItems: 'center',
-      gap: '8px',
-      padding: '8px 12px',
-      borderBottom: '1px solid #eee',
-      backgroundColor: isDragging ? '#fff' : isSelected ? '#e3f2fd' : 'transparent',
+      gap: '10px',
+      padding: '10px 12px',
+      marginBottom: '6px',
+      borderRadius: '10px',
+      border: `1px solid ${isSelected ? COLORS.ACCENT : COLORS.LIGHT_GRAY}`,
+      backgroundColor: isDragging ? COLORS.WHITE : isSelected ? '#FEF9E7' : COLORS.WHITE,
       cursor: 'pointer',
       position: 'relative',
       zIndex,
@@ -186,43 +267,120 @@ export function LayerPanel({
   };
 
   const thumbnailStyle: React.CSSProperties = {
-    width: '32px',
-    height: '32px',
+    width: '36px',
+    height: '36px',
     objectFit: 'contain',
-    backgroundColor: '#f5f5f5',
-    borderRadius: '2px',
-    border: '1px solid #ddd',
+    backgroundColor: COLORS.LIGHT_GRAY,
+    borderRadius: '8px',
+    border: `1px solid ${COLORS.LIGHT_GRAY}`,
+    padding: '2px',
   };
 
   const labelStyle: React.CSSProperties = {
     flex: 1,
     fontSize: '13px',
-    color: '#333',
+    fontWeight: 500,
+    color: COLORS.DARK_GRAY,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   };
 
   const deleteButtonStyle: React.CSSProperties = {
-    width: '20px',
-    height: '20px',
+    width: '28px',
+    height: '28px',
     padding: 0,
     border: 'none',
-    borderRadius: '2px',
-    backgroundColor: '#ffcdd2',
-    color: '#c62828',
+    borderRadius: '50%',
+    backgroundColor: 'transparent',
+    color: COLORS.GRAY,
     cursor: 'pointer',
-    fontSize: '12px',
+    fontSize: '16px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    transition: 'all 0.3s ease-out',
   };
+
+  const deleteButtonHoverStyle: React.CSSProperties = {
+    ...deleteButtonStyle,
+    backgroundColor: '#FFEBEB',
+    color: COLORS.RED,
+    transform: 'scale(1.1)',
+  };
+
+  // Delete button with hover state
+  const [hoveredDeleteId, setHoveredDeleteId] = useState<string | null>(null);
+
+  const [addButtonHovered, setAddButtonHovered] = useState(false);
+
+  // Front icon
+  const FrontIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+
+  // Back icon
+  const BackIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
 
   return (
     <div style={panelStyle}>
-      <div style={headerStyle}>Layers</div>
+      <div style={headerStyle}>
+        <div style={viewToggleContainerStyle}>
+          <button
+            style={getViewButtonStyle(currentView === 'front')}
+            onClick={() => onViewChange('front')}
+          >
+            <FrontIcon />
+            Front
+          </button>
+          <button
+            style={getViewButtonStyle(currentView === 'back')}
+            onClick={() => onViewChange('back')}
+          >
+            <BackIcon />
+            Back
+          </button>
+        </div>
+      </div>
+      <div style={{ padding: '12px 12px 4px' }}>
+        <button
+          style={{
+            ...addButtonStyle,
+            margin: 0,
+            ...(addButtonHovered ? {
+              filter: 'brightness(1.1)',
+              boxShadow: '0 4px 15px rgba(250, 192, 0, 0.4)',
+              transform: 'scale(1.02)',
+            } : {}),
+          }}
+          onClick={onAddImage}
+          onMouseEnter={() => setAddButtonHovered(true)}
+          onMouseLeave={() => setAddButtonHovered(false)}
+        >
+          <PlusIcon />
+          Add Image
+        </button>
+      </div>
       {images.length === 0 ? (
-        <div style={emptyStyle}>No images added</div>
+        <div style={emptyStyle}>
+          <div style={{ marginBottom: '4px', opacity: 0.6 }}>
+            <svg width="24" height="24" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1 11.5L8 15L15 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1 8L8 11.5L15 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          No layers yet
+        </div>
       ) : (
         <ul ref={listRef} style={listStyle}>
           {reversedImages.map((image, reversedIndex) => {
@@ -240,6 +398,7 @@ export function LayerPanel({
                   style={{
                     ...dragHandleStyle,
                     cursor: isDragging ? 'grabbing' : 'grab',
+                    backgroundColor: isDragging ? '#e2e8f0' : 'transparent',
                   }}
                   onMouseDown={(e) => handleMouseDown(e, reversedIndex)}
                 >
@@ -255,11 +414,15 @@ export function LayerPanel({
                 />
                 <span style={labelStyle}>Layer {originalIndex + 1}</span>
                 <button
-                  style={deleteButtonStyle}
+                  style={hoveredDeleteId === image.id ? deleteButtonHoverStyle : deleteButtonStyle}
                   onClick={(e) => handleDelete(e, image.id)}
-                  title="Delete"
+                  onMouseEnter={() => setHoveredDeleteId(image.id)}
+                  onMouseLeave={() => setHoveredDeleteId(null)}
+                  title="Delete layer"
                 >
-                  ×
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </button>
               </li>
             );

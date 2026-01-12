@@ -22,6 +22,11 @@ interface ImageData {
     naturalHeight: number;
     transform: ImageTransform;
 }
+type TShirtView = 'front' | 'back';
+interface ViewImages {
+    front: ImageData[];
+    back: ImageData[];
+}
 interface BoundingBox {
     minX: number;
     minY: number;
@@ -47,20 +52,22 @@ interface EditorConfig {
     maxFileSize?: number;
 }
 interface TShirtBuilderProps {
-    /** Background image (e.g., t-shirt template) */
-    backgroundImage?: string;
+    /** Background image for front view (e.g., t-shirt template) */
+    frontBgImage?: string;
+    /** Background image for back view */
+    backBgImage?: string;
     /** Editor configuration */
     config?: Partial<EditorConfig>;
-    /** Callback when images change */
-    onChange?: (images: ImageData[]) => void;
+    /** Callback when images change (includes both views) */
+    onChange?: (images: ViewImages, currentView: TShirtView) => void;
     /** Callback when export is requested */
-    onExport?: (dataUrl: string) => void;
+    onExport?: (dataUrl: string, view: TShirtView) => void;
     /** Custom class name */
     className?: string;
     /** Custom styles */
     style?: React.CSSProperties;
     /** Initial images for controlled mode */
-    initialImages?: ImageData[];
+    initialImages?: ViewImages;
 }
 interface ControlHandle {
     position: 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's' | 'e' | 'w' | 'rotate';
@@ -75,7 +82,7 @@ interface DragState {
     handle?: ControlHandle['position'];
 }
 
-declare function TShirtBuilder({ backgroundImage, config: configProp, onChange, onExport, className, style, initialImages, }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
+declare function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages, }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
 
 interface ControlsProps {
     transform: ImageTransform;
@@ -100,8 +107,11 @@ interface LayerPanelProps {
     onSelect: (id: string) => void;
     onDelete: (id: string) => void;
     onReorder: (fromIndex: number, toIndex: number) => void;
+    onAddImage: () => void;
+    currentView: TShirtView;
+    onViewChange: (view: TShirtView) => void;
 }
-declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, }: LayerPanelProps): react_jsx_runtime.JSX.Element;
+declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, }: LayerPanelProps): react_jsx_runtime.JSX.Element;
 
 interface UseImageUploadOptions {
     config: EditorConfig;
@@ -140,4 +150,4 @@ declare function exportToDataUrl(canvas: HTMLCanvasElement, backgroundImage: HTM
 declare function createOffscreenCanvas(width: number, height: number): HTMLCanvasElement;
 
 export { Controls, LayerPanel, TShirtBuilder, Toolbar, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload };
-export type { BoundingBox, ControlHandle, DragMode, DragState, EditorConfig, ImageData, ImageTransform, Position, Size, TShirtBuilderProps };
+export type { BoundingBox, ControlHandle, DragMode, DragState, EditorConfig, ImageData, ImageTransform, Position, Size, TShirtBuilderProps, TShirtView, ViewImages };

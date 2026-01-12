@@ -11,27 +11,31 @@ interface ControlsProps {
   ) => void;
 }
 
-const HANDLE_SIZE = 12;
+const HANDLE_SIZE = 10;
+const ACCENT_COLOR = '#4A4A4A'; // dark gray - subtle and professional
 
 const handleStyle: React.CSSProperties = {
   position: 'absolute',
   width: HANDLE_SIZE,
   height: HANDLE_SIZE,
-  backgroundColor: '#fff',
-  border: '2px solid #0066ff',
-  borderRadius: '2px',
+  backgroundColor: '#ffffff',
+  border: `2px solid ${ACCENT_COLOR}`,
+  borderRadius: '50%',
   boxSizing: 'border-box',
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
+  transition: 'transform 0.3s ease-out, box-shadow 0.3s ease-out',
 };
 
 const rotateHandleStyle: React.CSSProperties = {
   position: 'absolute',
-  width: HANDLE_SIZE,
-  height: HANDLE_SIZE,
-  backgroundColor: '#0066ff',
+  width: HANDLE_SIZE + 2,
+  height: HANDLE_SIZE + 2,
+  backgroundColor: ACCENT_COLOR,
   border: '2px solid #fff',
   borderRadius: '50%',
   boxSizing: 'border-box',
   cursor: 'grab',
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
 };
 
 export function Controls({ transform, allowRotation, onMouseDown }: ControlsProps) {
@@ -50,9 +54,11 @@ export function Controls({ transform, allowRotation, onMouseDown }: ControlsProp
 
   const borderStyle: React.CSSProperties = {
     position: 'absolute',
-    inset: 0,
-    border: '2px dashed #0066ff',
+    inset: -1,
+    border: `2px solid ${ACCENT_COLOR}`,
+    borderRadius: '4px',
     pointerEvents: 'none',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
   };
 
   const handles: Array<{
@@ -96,18 +102,19 @@ export function Controls({ transform, allowRotation, onMouseDown }: ControlsProp
           <div
             style={{
               position: 'absolute',
-              top: -30,
+              top: -28,
               left: '50%',
-              width: 2,
-              height: 20,
-              backgroundColor: '#0066ff',
+              width: 1.5,
+              height: 18,
+              backgroundColor: ACCENT_COLOR,
               transform: 'translateX(-50%)',
+              opacity: 0.8,
             }}
           />
           <div
             style={{
               ...rotateHandleStyle,
-              top: -36 - HANDLE_SIZE / 2,
+              top: -34 - HANDLE_SIZE / 2,
               left: '50%',
               transform: 'translateX(-50%)',
               pointerEvents: 'auto',
