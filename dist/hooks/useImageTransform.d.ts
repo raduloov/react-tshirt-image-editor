@@ -2,11 +2,13 @@ import type { ImageData, ImageTransform, DragMode, ControlHandle, EditorConfig }
 interface UseImageTransformOptions {
     images: ImageData[];
     config: EditorConfig;
+    containerRef: React.RefObject<HTMLElement>;
     onChange?: (images: ImageData[]) => void;
 }
-export declare function useImageTransform({ images, config, onChange }: UseImageTransformOptions): {
+export declare function useImageTransform({ images, config, containerRef, onChange }: UseImageTransformOptions): {
     selectedId: string | null;
     isDragging: boolean;
+    dragMode: DragMode;
     handleMouseDown: (event: React.MouseEvent, imageId: string, mode: DragMode, handle?: ControlHandle["position"]) => void;
     selectImage: (imageId: string | null) => void;
     deselectAll: () => void;

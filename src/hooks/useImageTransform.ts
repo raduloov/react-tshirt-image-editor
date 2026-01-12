@@ -11,12 +11,14 @@ import type {
 interface UseImageTransformOptions {
   images: ImageData[];
   config: EditorConfig;
+  containerRef: React.RefObject<HTMLElement>;
   onChange?: (images: ImageData[]) => void;
 }
 
-export function useImageTransform({ images, config, onChange }: UseImageTransformOptions) {
+export function useImageTransform({ images, config, containerRef, onChange }: UseImageTransformOptions) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragMode, setDragMode] = useState<DragMode | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
 
   // Auto-select newly added image
@@ -76,6 +78,7 @@ export function useImageTransform({ images, config, onChange }: UseImageTransfor
 
       setSelectedId(imageId);
       setIsDragging(true);
+      setDragMode(mode);
       dragStateRef.current = {
         mode,
         imageId,
@@ -171,6 +174,14 @@ export function useImageTransform({ images, config, onChange }: UseImageTransfor
           if (!config.allowRotation) {
             return;
           }
+
+          // Get container position to convert client coords to local coords
+          const container = containerRef.current;
+          if (!container) return;
+
+          const rect = container.getBoundingClientRect();
+
+          // Image center in local (canvas) coordinates
           const centerX =
             dragState.startTransform.position.x +
             dragState.startTransform.size.width / 2;
@@ -178,13 +189,19 @@ export function useImageTransform({ images, config, onChange }: UseImageTransfor
             dragState.startTransform.position.y +
             dragState.startTransform.size.height / 2;
 
+          // Convert mouse positions to local coordinates
+          const startLocalX = dragState.startPosition.x - rect.left;
+          const startLocalY = dragState.startPosition.y - rect.top;
+          const currentLocalX = event.clientX - rect.left;
+          const currentLocalY = event.clientY - rect.top;
+
           const startAngle = Math.atan2(
-            dragState.startPosition.y - centerY,
-            dragState.startPosition.x - centerX
+            startLocalY - centerY,
+            startLocalX - centerX
           );
           const currentAngle = Math.atan2(
-            event.clientY - centerY,
-            event.clientX - centerX
+            currentLocalY - centerY,
+            currentLocalX - centerX
           );
 
           const rotation =
@@ -204,11 +221,12 @@ export function useImageTransform({ images, config, onChange }: UseImageTransfor
 
       updateImageTransform(dragState.imageId, newTransform);
     },
-    [images, config.allowRotation, updateImageTransform]
+    [images, config.allowRotation, containerRef, updateImageTransform]
   );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setDragMode(null);
     dragStateRef.current = null;
   }, []);
 
@@ -284,6 +302,7 @@ export function useImageTransform({ images, config, onChange }: UseImageTransfor
   return {
     selectedId,
     isDragging,
+    dragMode,
     handleMouseDown,
     selectImage,
     deselectAll,

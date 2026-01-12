@@ -1,18 +1,36 @@
 import type { ImageData, EditorConfig } from '../types';
 
-export function exportToDataUrl(
+// Helper to load an image from a source URL
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+export async function exportToDataUrl(
   canvas: HTMLCanvasElement,
   backgroundImage: HTMLImageElement | null,
   images: ImageData[],
   config: EditorConfig,
   format: 'image/png' | 'image/jpeg' = 'image/png',
   quality = 0.92
-): string {
+): Promise<string> {
   const scale = config.exportScale || 1;
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Failed to get canvas context');
   }
+
+  // Pre-load all user images to ensure they're ready for drawing
+  const loadedImages = await Promise.all(
+    images.map(async (imageData) => ({
+      transform: imageData.transform,
+      img: await loadImage(imageData.src),
+    }))
+  );
 
   // Clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -21,13 +39,31 @@ export function exportToDataUrl(
   ctx.save();
   ctx.scale(scale, scale);
 
-  // Draw background if exists
+  // Draw background using "cover" behavior to match CSS background-size: cover
   if (backgroundImage) {
-    ctx.drawImage(backgroundImage, 0, 0, config.width, config.height);
+    const imgRatio = backgroundImage.naturalWidth / backgroundImage.naturalHeight;
+    const containerRatio = config.width / config.height;
+
+    let drawWidth: number, drawHeight: number, drawX: number, drawY: number;
+
+    if (imgRatio > containerRatio) {
+      // Image is wider - fit height, crop width
+      drawHeight = config.height;
+      drawWidth = backgroundImage.naturalWidth * (config.height / backgroundImage.naturalHeight);
+      drawX = (config.width - drawWidth) / 2;
+      drawY = 0;
+    } else {
+      // Image is taller - fit width, crop height
+      drawWidth = config.width;
+      drawHeight = backgroundImage.naturalHeight * (config.width / backgroundImage.naturalWidth);
+      drawX = 0;
+      drawY = (config.height - drawHeight) / 2;
+    }
+
+    ctx.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight);
   }
 
-  // Draw all user images in order (first = bottom, last = top)
-  // Clip to printable area if defined
+  // Set up clipping if printable area is defined
   if (config.printableArea) {
     ctx.save();
     ctx.beginPath();
@@ -40,14 +76,10 @@ export function exportToDataUrl(
     ctx.clip();
   }
 
-  for (const imageData of images) {
-    const { transform, src } = imageData;
-    const img = new Image();
-    img.src = src;
-
+  // Draw all user images in order (first = bottom, last = top)
+  for (const { transform, img } of loadedImages) {
     ctx.save();
 
-    // Apply rotation around image center
     if (transform.rotation !== 0) {
       const centerX = transform.position.x + transform.size.width / 2;
       const centerY = transform.position.y + transform.size.height / 2;
@@ -67,7 +99,7 @@ export function exportToDataUrl(
     ctx.restore();
   }
 
-  // Restore from clip
+  // Restore from clip if it was applied
   if (config.printableArea) {
     ctx.restore();
   }

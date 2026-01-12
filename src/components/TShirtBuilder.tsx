@@ -96,6 +96,7 @@ export function TShirtBuilder({
   const {
     selectedId,
     isDragging,
+    dragMode,
     handleMouseDown,
     selectImage,
     deselectAll,
@@ -105,8 +106,22 @@ export function TShirtBuilder({
   } = useImageTransform({
     images,
     config,
+    containerRef,
     onChange: handleImagesChange
   });
+
+  // SVG rotate cursor - same as in Controls.tsx
+  const ROTATE_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3C/svg%3E") 12 12, crosshair`;
+
+  // Set cursor on body during rotation to ensure it persists outside the handle
+  useEffect(() => {
+    if (isDragging && dragMode === 'rotate') {
+      document.body.style.cursor = ROTATE_CURSOR;
+      return () => {
+        document.body.style.cursor = '';
+      };
+    }
+  }, [isDragging, dragMode]);
 
   const handleExport = useCallback(async () => {
     if (!onExport) return;
@@ -132,10 +147,10 @@ export function TShirtBuilder({
     ]);
 
     // Export front
-    const frontDataUrl = exportToDataUrl(canvas, frontBg, viewImages.front, config);
+    const frontDataUrl = await exportToDataUrl(canvas, frontBg, viewImages.front, config);
 
     // Export back
-    const backDataUrl = exportToDataUrl(canvas, backBg, viewImages.back, config);
+    const backDataUrl = await exportToDataUrl(canvas, backBg, viewImages.back, config);
 
     onExport({ front: frontDataUrl, back: backDataUrl });
   }, [config, onExport, frontBgImage, backBgImage, viewImages]);
@@ -159,7 +174,7 @@ export function TShirtBuilder({
     backgroundSize: "cover",
     backgroundPosition: "center",
     overflow: "hidden",
-    cursor: isDragging ? "grabbing" : "default",
+    cursor: isDragging && dragMode !== 'rotate' ? "grabbing" : "default",
     userSelect: "none",
     borderRadius: "10px",
     boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
@@ -428,6 +443,7 @@ export function TShirtBuilder({
                   height: config.printableArea.maxY - config.printableArea.minY,
                   border: `1.5px dashed rgba(74, 74, 74, 0.4)`,
                   borderRadius: "4px",
+                  boxSizing: "border-box",
                   pointerEvents: "none"
                 }}
               />

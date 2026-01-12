@@ -116,9 +116,10 @@ function useImageUpload({ config, onImageLoad, onError }) {
     };
 }
 
-function useImageTransform({ images, config, onChange }) {
+function useImageTransform({ images, config, containerRef, onChange }) {
     const [selectedId, setSelectedId] = React.useState(null);
     const [isDragging, setIsDragging] = React.useState(false);
+    const [dragMode, setDragMode] = React.useState(null);
     const dragStateRef = React.useRef(null);
     // Auto-select newly added image
     React.useEffect(() => {
@@ -158,6 +159,7 @@ function useImageTransform({ images, config, onChange }) {
         event.stopPropagation();
         setSelectedId(imageId);
         setIsDragging(true);
+        setDragMode(mode);
         dragStateRef.current = {
             mode,
             imageId,
@@ -239,12 +241,23 @@ function useImageTransform({ images, config, onChange }) {
                 if (!config.allowRotation) {
                     return;
                 }
+                // Get container position to convert client coords to local coords
+                const container = containerRef.current;
+                if (!container)
+                    return;
+                const rect = container.getBoundingClientRect();
+                // Image center in local (canvas) coordinates
                 const centerX = dragState.startTransform.position.x +
                     dragState.startTransform.size.width / 2;
                 const centerY = dragState.startTransform.position.y +
                     dragState.startTransform.size.height / 2;
-                const startAngle = Math.atan2(dragState.startPosition.y - centerY, dragState.startPosition.x - centerX);
-                const currentAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
+                // Convert mouse positions to local coordinates
+                const startLocalX = dragState.startPosition.x - rect.left;
+                const startLocalY = dragState.startPosition.y - rect.top;
+                const currentLocalX = event.clientX - rect.left;
+                const currentLocalY = event.clientY - rect.top;
+                const startAngle = Math.atan2(startLocalY - centerY, startLocalX - centerX);
+                const currentAngle = Math.atan2(currentLocalY - centerY, currentLocalX - centerX);
                 const rotation = dragState.startTransform.rotation +
                     ((currentAngle - startAngle) * 180) / Math.PI;
                 newTransform = {
@@ -257,9 +270,10 @@ function useImageTransform({ images, config, onChange }) {
                 return;
         }
         updateImageTransform(dragState.imageId, newTransform);
-    }, [images, config.allowRotation, updateImageTransform]);
+    }, [images, config.allowRotation, containerRef, updateImageTransform]);
     const handleMouseUp = React.useCallback(() => {
         setIsDragging(false);
+        setDragMode(null);
         dragStateRef.current = null;
     }, []);
     // Attach global mouse events when dragging
@@ -317,6 +331,7 @@ function useImageTransform({ images, config, onChange }) {
     return {
         selectedId,
         isDragging,
+        dragMode,
         handleMouseDown,
         selectImage,
         deselectAll,
@@ -331,6 +346,8 @@ function useImageTransform({ images, config, onChange }) {
 
 const HANDLE_SIZE = 10;
 const ACCENT_COLOR = '#4A4A4A'; // dark gray - subtle and professional
+// SVG rotate cursor icon encoded as data URI
+const ROTATE_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3C/svg%3E") 12 12, crosshair`;
 const handleStyle = {
     position: 'absolute',
     width: HANDLE_SIZE,
@@ -350,7 +367,7 @@ const rotateHandleStyle = {
     border: '2px solid #fff',
     borderRadius: '50%',
     boxSizing: 'border-box',
-    cursor: 'grab',
+    cursor: ROTATE_CURSOR,
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
 };
 function Controls({ transform, allowRotation, onMouseDown }) {
@@ -687,35 +704,62 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
                 }) }))] }));
 }
 
-function exportToDataUrl(canvas, backgroundImage, images, config, format = 'image/png', quality = 0.92) {
+// Helper to load an image from a source URL
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+async function exportToDataUrl(canvas, backgroundImage, images, config, format = 'image/png', quality = 0.92) {
     const scale = config.exportScale || 1;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
         throw new Error('Failed to get canvas context');
     }
+    // Pre-load all user images to ensure they're ready for drawing
+    const loadedImages = await Promise.all(images.map(async (imageData) => ({
+        transform: imageData.transform,
+        img: await loadImage(imageData.src),
+    })));
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // Scale all drawing operations
     ctx.save();
     ctx.scale(scale, scale);
-    // Draw background if exists
+    // Draw background using "cover" behavior to match CSS background-size: cover
     if (backgroundImage) {
-        ctx.drawImage(backgroundImage, 0, 0, config.width, config.height);
+        const imgRatio = backgroundImage.naturalWidth / backgroundImage.naturalHeight;
+        const containerRatio = config.width / config.height;
+        let drawWidth, drawHeight, drawX, drawY;
+        if (imgRatio > containerRatio) {
+            // Image is wider - fit height, crop width
+            drawHeight = config.height;
+            drawWidth = backgroundImage.naturalWidth * (config.height / backgroundImage.naturalHeight);
+            drawX = (config.width - drawWidth) / 2;
+            drawY = 0;
+        }
+        else {
+            // Image is taller - fit width, crop height
+            drawWidth = config.width;
+            drawHeight = backgroundImage.naturalHeight * (config.width / backgroundImage.naturalWidth);
+            drawX = 0;
+            drawY = (config.height - drawHeight) / 2;
+        }
+        ctx.drawImage(backgroundImage, drawX, drawY, drawWidth, drawHeight);
     }
-    // Draw all user images in order (first = bottom, last = top)
-    // Clip to printable area if defined
+    // Set up clipping if printable area is defined
     if (config.printableArea) {
         ctx.save();
         ctx.beginPath();
         ctx.rect(config.printableArea.minX, config.printableArea.minY, config.printableArea.maxX - config.printableArea.minX, config.printableArea.maxY - config.printableArea.minY);
         ctx.clip();
     }
-    for (const imageData of images) {
-        const { transform, src } = imageData;
-        const img = new Image();
-        img.src = src;
+    // Draw all user images in order (first = bottom, last = top)
+    for (const { transform, img } of loadedImages) {
         ctx.save();
-        // Apply rotation around image center
         if (transform.rotation !== 0) {
             const centerX = transform.position.x + transform.size.width / 2;
             const centerY = transform.position.y + transform.size.height / 2;
@@ -726,7 +770,7 @@ function exportToDataUrl(canvas, backgroundImage, images, config, format = 'imag
         ctx.drawImage(img, transform.position.x, transform.position.y, transform.size.width, transform.size.height);
         ctx.restore();
     }
-    // Restore from clip
+    // Restore from clip if it was applied
     if (config.printableArea) {
         ctx.restore();
     }
@@ -802,11 +846,23 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
         onImageLoad: handleImageLoad,
         onError: setError
     });
-    const { selectedId, isDragging, handleMouseDown, selectImage, deselectAll, deleteImage, deleteSelected, reorderImage } = useImageTransform({
+    const { selectedId, isDragging, dragMode, handleMouseDown, selectImage, deselectAll, deleteImage, deleteSelected, reorderImage } = useImageTransform({
         images,
         config,
+        containerRef,
         onChange: handleImagesChange
     });
+    // SVG rotate cursor - same as in Controls.tsx
+    const ROTATE_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3C/svg%3E") 12 12, crosshair`;
+    // Set cursor on body during rotation to ensure it persists outside the handle
+    React.useEffect(() => {
+        if (isDragging && dragMode === 'rotate') {
+            document.body.style.cursor = ROTATE_CURSOR;
+            return () => {
+                document.body.style.cursor = '';
+            };
+        }
+    }, [isDragging, dragMode]);
     const handleExport = React.useCallback(async () => {
         if (!onExport)
             return;
@@ -829,9 +885,9 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
             loadImage(backBgImage)
         ]);
         // Export front
-        const frontDataUrl = exportToDataUrl(canvas, frontBg, viewImages.front, config);
+        const frontDataUrl = await exportToDataUrl(canvas, frontBg, viewImages.front, config);
         // Export back
-        const backDataUrl = exportToDataUrl(canvas, backBg, viewImages.back, config);
+        const backDataUrl = await exportToDataUrl(canvas, backBg, viewImages.back, config);
         onExport({ front: frontDataUrl, back: backDataUrl });
     }, [config, onExport, frontBgImage, backBgImage, viewImages]);
     const handleContainerClick = React.useCallback((e) => {
@@ -849,7 +905,7 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
         backgroundSize: "cover",
         backgroundPosition: "center",
         overflow: "hidden",
-        cursor: isDragging ? "grabbing" : "default",
+        cursor: isDragging && dragMode !== 'rotate' ? "grabbing" : "default",
         userSelect: "none",
         borderRadius: "10px",
         boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
@@ -991,6 +1047,7 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
                                             height: config.printableArea.maxY - config.printableArea.minY,
                                             border: `1.5px dashed rgba(74, 74, 74, 0.4)`,
                                             borderRadius: "4px",
+                                            boxSizing: "border-box",
                                             pointerEvents: "none"
                                         } }))] }), onExport && (jsxRuntime.jsxs("button", { style: exportButtonStyle, onClick: handleExport, onMouseEnter: () => setExportButtonHovered(true), onMouseLeave: () => {
                                     setExportButtonHovered(false);

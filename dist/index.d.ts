@@ -123,11 +123,13 @@ declare function useImageUpload({ config, onImageLoad, onError }: UseImageUpload
 interface UseImageTransformOptions {
     images: ImageData[];
     config: EditorConfig;
+    containerRef: React.RefObject<HTMLElement>;
     onChange?: (images: ImageData[]) => void;
 }
-declare function useImageTransform({ images, config, onChange }: UseImageTransformOptions): {
+declare function useImageTransform({ images, config, containerRef, onChange }: UseImageTransformOptions): {
     selectedId: string | null;
     isDragging: boolean;
+    dragMode: DragMode;
     handleMouseDown: (event: React.MouseEvent, imageId: string, mode: DragMode, handle?: ControlHandle["position"]) => void;
     selectImage: (imageId: string | null) => void;
     deselectAll: () => void;
@@ -139,7 +141,7 @@ declare function useImageTransform({ images, config, onChange }: UseImageTransfo
     updateImageTransform: (imageId: string, newTransform: ImageTransform) => void;
 };
 
-declare function exportToDataUrl(canvas: HTMLCanvasElement, backgroundImage: HTMLImageElement | null, images: ImageData[], config: EditorConfig, format?: 'image/png' | 'image/jpeg', quality?: number): string;
+declare function exportToDataUrl(canvas: HTMLCanvasElement, backgroundImage: HTMLImageElement | null, images: ImageData[], config: EditorConfig, format?: 'image/png' | 'image/jpeg', quality?: number): Promise<string>;
 declare function createOffscreenCanvas(width: number, height: number): HTMLCanvasElement;
 
 export { Controls, LayerPanel, TShirtBuilder, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload };

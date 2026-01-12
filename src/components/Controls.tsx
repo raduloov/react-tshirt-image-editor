@@ -14,6 +14,9 @@ interface ControlsProps {
 const HANDLE_SIZE = 10;
 const ACCENT_COLOR = '#4A4A4A'; // dark gray - subtle and professional
 
+// SVG rotate cursor icon encoded as data URI
+const ROTATE_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3C/svg%3E") 12 12, crosshair`;
+
 const handleStyle: React.CSSProperties = {
   position: 'absolute',
   width: HANDLE_SIZE,
@@ -34,7 +37,7 @@ const rotateHandleStyle: React.CSSProperties = {
   border: '2px solid #fff',
   borderRadius: '50%',
   boxSizing: 'border-box',
-  cursor: 'grab',
+  cursor: ROTATE_CURSOR,
   boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
 };
 
