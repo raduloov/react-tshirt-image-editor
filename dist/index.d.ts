@@ -1,3 +1,4 @@
+import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as React$1 from 'react';
 import React__default from 'react';
 
@@ -84,14 +85,14 @@ interface DragState {
     handle?: ControlHandle['position'];
 }
 
-declare const TShirtBuilder: React__default.NamedExoticComponent<TShirtBuilderProps>;
+declare function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
 
 interface ControlsProps {
     transform: ImageTransform;
     allowRotation: boolean;
     onMouseDown: (event: React__default.MouseEvent, mode: DragMode, handle?: ControlHandle['position']) => void;
 }
-declare const Controls: React__default.NamedExoticComponent<ControlsProps>;
+declare function Controls({ transform, allowRotation, onMouseDown }: ControlsProps): react_jsx_runtime.JSX.Element;
 
 interface LayerPanelProps {
     images: ImageData[];
@@ -103,7 +104,7 @@ interface LayerPanelProps {
     currentView: TShirtView;
     onViewChange: (view: TShirtView) => void;
 }
-declare const LayerPanel: React__default.NamedExoticComponent<LayerPanelProps>;
+declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange }: LayerPanelProps): react_jsx_runtime.JSX.Element;
 
 interface UseImageUploadOptions {
     config: EditorConfig;

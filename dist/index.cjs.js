@@ -10,34 +10,17 @@ function generateId() {
 }
 function useImageUpload({ config, onImageLoad, onError }) {
     const inputRef = React.useRef(null);
-    // Use refs to store latest callback values to avoid recreating processFile
-    const onImageLoadRef = React.useRef(onImageLoad);
-    const onErrorRef = React.useRef(onError);
-    const configRef = React.useRef(config);
-    React.useEffect(() => {
-        onImageLoadRef.current = onImageLoad;
-    }, [onImageLoad]);
-    React.useEffect(() => {
-        onErrorRef.current = onError;
-    }, [onError]);
-    React.useEffect(() => {
-        configRef.current = config;
-    }, [config]);
     const acceptedTypes = config.acceptedFileTypes || DEFAULT_ACCEPTED_TYPES;
-    config.maxFileSize || DEFAULT_MAX_FILE_SIZE;
+    const maxFileSize = config.maxFileSize || DEFAULT_MAX_FILE_SIZE;
     const processFile = React.useCallback((file) => {
-        var _a, _b;
-        const currentConfig = configRef.current;
-        const currentAcceptedTypes = currentConfig.acceptedFileTypes || DEFAULT_ACCEPTED_TYPES;
-        const currentMaxFileSize = currentConfig.maxFileSize || DEFAULT_MAX_FILE_SIZE;
         // Validate file type
-        if (!currentAcceptedTypes.includes(file.type)) {
-            (_a = onErrorRef.current) === null || _a === void 0 ? void 0 : _a.call(onErrorRef, `Невалиден тип файл. Позволени: ${currentAcceptedTypes.join(', ')}`);
+        if (!acceptedTypes.includes(file.type)) {
+            onError === null || onError === void 0 ? void 0 : onError(`Невалиден тип файл. Позволени: ${acceptedTypes.join(', ')}`);
             return;
         }
         // Validate file size
-        if (file.size > currentMaxFileSize) {
-            (_b = onErrorRef.current) === null || _b === void 0 ? void 0 : _b.call(onErrorRef, `Файлът е твърде голям. Максимален размер: ${Math.round(currentMaxFileSize / 1024 / 1024)}MB`);
+        if (file.size > maxFileSize) {
+            onError === null || onError === void 0 ? void 0 : onError(`Файлът е твърде голям. Максимален размер: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
             return;
         }
         const reader = new FileReader();
@@ -47,13 +30,12 @@ function useImageUpload({ config, onImageLoad, onError }) {
             const img = new Image();
             img.onload = () => {
                 const { naturalWidth, naturalHeight } = img;
-                const cfg = configRef.current;
                 // Calculate initial size to fit within editor while maintaining aspect ratio
-                const printableArea = cfg.printableArea || {
+                const printableArea = config.printableArea || {
                     minX: 0,
                     minY: 0,
-                    maxX: cfg.width,
-                    maxY: cfg.height,
+                    maxX: config.width,
+                    maxY: config.height,
                 };
                 const areaWidth = printableArea.maxX - printableArea.minX;
                 const areaHeight = printableArea.maxY - printableArea.minY;
@@ -78,7 +60,7 @@ function useImageUpload({ config, onImageLoad, onError }) {
                     size: { width, height },
                     rotation: 0,
                 };
-                onImageLoadRef.current({
+                onImageLoad({
                     id: generateId(),
                     src,
                     naturalWidth,
@@ -87,18 +69,15 @@ function useImageUpload({ config, onImageLoad, onError }) {
                 });
             };
             img.onerror = () => {
-                var _a;
-                (_a = onErrorRef.current) === null || _a === void 0 ? void 0 : _a.call(onErrorRef, 'Грешка при зареждане на изображението');
+                onError === null || onError === void 0 ? void 0 : onError('Грешка при зареждане на изображението');
             };
             img.src = src;
         };
         reader.onerror = () => {
-            var _a;
-            (_a = onErrorRef.current) === null || _a === void 0 ? void 0 : _a.call(onErrorRef, 'Грешка при четене на файла');
+            onError === null || onError === void 0 ? void 0 : onError('Грешка при четене на файла');
         };
         reader.readAsDataURL(file);
-    }, [] // No dependencies - uses refs internally
-    );
+    }, [acceptedTypes, maxFileSize, config, onImageLoad, onError]);
     const handleFileChange = React.useCallback((event) => {
         var _a;
         const file = (_a = event.target.files) === null || _a === void 0 ? void 0 : _a[0];
@@ -127,15 +106,14 @@ function useImageUpload({ config, onImageLoad, onError }) {
         var _a;
         (_a = inputRef.current) === null || _a === void 0 ? void 0 : _a.click();
     }, []);
-    // Memoize return value for stable reference
-    return React.useMemo(() => ({
+    return {
         inputRef,
         handleFileChange,
         handleDrop,
         handleDragOver,
         openFilePicker,
         acceptedTypes,
-    }), [handleFileChange, handleDrop, handleDragOver, openFilePicker, acceptedTypes]);
+    };
 }
 
 function useImageTransform({ images, config, containerRef, onChange }) {
@@ -143,22 +121,6 @@ function useImageTransform({ images, config, containerRef, onChange }) {
     const [isDragging, setIsDragging] = React.useState(false);
     const [dragMode, setDragMode] = React.useState(null);
     const dragStateRef = React.useRef(null);
-    const rafRef = React.useRef(null);
-    const pendingMouseEvent = React.useRef(null);
-    // Store latest values in refs to avoid recreating callbacks
-    const imagesRef = React.useRef(images);
-    const onChangeRef = React.useRef(onChange);
-    const configRef = React.useRef(config);
-    // Keep refs updated
-    React.useEffect(() => {
-        imagesRef.current = images;
-    }, [images]);
-    React.useEffect(() => {
-        onChangeRef.current = onChange;
-    }, [onChange]);
-    React.useEffect(() => {
-        configRef.current = config;
-    }, [config]);
     // Auto-select newly added image
     React.useEffect(() => {
         if (images.length > 0 && !selectedId) {
@@ -175,7 +137,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
     const clampTransform = React.useCallback((newTransform) => {
         const { position, size, rotation } = newTransform;
         // Only clamp size to min, allow position to be anywhere
-        const minSize = configRef.current.minImageSize || 20;
+        const minSize = config.minImageSize || 20;
         const clampedWidth = Math.max(minSize, size.width);
         const clampedHeight = Math.max(minSize, size.height);
         return {
@@ -183,15 +145,14 @@ function useImageTransform({ images, config, containerRef, onChange }) {
             size: { width: clampedWidth, height: clampedHeight },
             rotation,
         };
-    }, []);
+    }, [config.minImageSize]);
     const updateImageTransform = React.useCallback((imageId, newTransform) => {
-        var _a;
         const clamped = clampTransform(newTransform);
-        const updatedImages = imagesRef.current.map((img) => img.id === imageId ? { ...img, transform: clamped } : img);
-        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, updatedImages);
-    }, [clampTransform]);
+        const updatedImages = images.map((img) => img.id === imageId ? { ...img, transform: clamped } : img);
+        onChange === null || onChange === void 0 ? void 0 : onChange(updatedImages);
+    }, [clampTransform, images, onChange]);
     const handleMouseDown = React.useCallback((event, imageId, mode, handle) => {
-        const image = imagesRef.current.find((img) => img.id === imageId);
+        const image = images.find((img) => img.id === imageId);
         if (!image)
             return;
         event.preventDefault();
@@ -206,12 +167,12 @@ function useImageTransform({ images, config, containerRef, onChange }) {
             startTransform: { ...image.transform },
             handle,
         };
-    }, []);
-    const processMouseMove = React.useCallback((event) => {
+    }, [images]);
+    const handleMouseMove = React.useCallback((event) => {
         const dragState = dragStateRef.current;
         if (!dragState)
             return;
-        const image = imagesRef.current.find((img) => img.id === dragState.imageId);
+        const image = images.find((img) => img.id === dragState.imageId);
         if (!image)
             return;
         const deltaX = event.clientX - dragState.startPosition.x;
@@ -220,7 +181,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         switch (dragState.mode) {
             case 'move':
                 newTransform = {
-                    ...dragState.startTransform,
+                    ...image.transform,
                     position: {
                         x: dragState.startTransform.position.x + deltaX,
                         y: dragState.startTransform.position.y + deltaY,
@@ -230,7 +191,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
             case 'resize': {
                 const { handle } = dragState;
                 const aspectRatio = image.naturalWidth / image.naturalHeight;
-                const minSize = configRef.current.minImageSize || 20;
+                const minSize = config.minImageSize || 20;
                 let newWidth = dragState.startTransform.size.width;
                 let newX = dragState.startTransform.position.x;
                 let newY = dragState.startTransform.position.y;
@@ -270,14 +231,14 @@ function useImageTransform({ images, config, containerRef, onChange }) {
                         break;
                 }
                 newTransform = {
-                    ...dragState.startTransform,
+                    ...image.transform,
                     position: { x: newX, y: newY },
                     size: { width: clampedWidth, height: clampedHeight },
                 };
                 break;
             }
             case 'rotate': {
-                if (!configRef.current.allowRotation) {
+                if (!config.allowRotation) {
                     return;
                 }
                 // Get container position to convert client coords to local coords
@@ -300,7 +261,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
                 const rotation = dragState.startTransform.rotation +
                     ((currentAngle - startAngle) * 180) / Math.PI;
                 newTransform = {
-                    ...dragState.startTransform,
+                    ...image.transform,
                     rotation,
                 };
                 break;
@@ -309,26 +270,8 @@ function useImageTransform({ images, config, containerRef, onChange }) {
                 return;
         }
         updateImageTransform(dragState.imageId, newTransform);
-    }, [containerRef, updateImageTransform]);
-    // Throttle mousemove with requestAnimationFrame for smooth performance
-    const handleMouseMove = React.useCallback((event) => {
-        pendingMouseEvent.current = event;
-        if (rafRef.current === null) {
-            rafRef.current = requestAnimationFrame(() => {
-                if (pendingMouseEvent.current) {
-                    processMouseMove(pendingMouseEvent.current);
-                }
-                rafRef.current = null;
-            });
-        }
-    }, [processMouseMove]);
+    }, [images, config.minImageSize, config.allowRotation, containerRef, updateImageTransform]);
     const handleMouseUp = React.useCallback(() => {
-        // Cancel any pending RAF
-        if (rafRef.current !== null) {
-            cancelAnimationFrame(rafRef.current);
-            rafRef.current = null;
-        }
-        pendingMouseEvent.current = null;
         setIsDragging(false);
         setDragMode(null);
         dragStateRef.current = null;
@@ -351,36 +294,29 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         setSelectedId(null);
     }, []);
     const deleteImage = React.useCallback((imageId) => {
-        var _a;
-        const updatedImages = imagesRef.current.filter((img) => img.id !== imageId);
-        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, updatedImages);
-    }, []);
+        const updatedImages = images.filter((img) => img.id !== imageId);
+        onChange === null || onChange === void 0 ? void 0 : onChange(updatedImages);
+    }, [images, onChange]);
     const deleteSelected = React.useCallback(() => {
         if (selectedId) {
             deleteImage(selectedId);
         }
     }, [selectedId, deleteImage]);
     const bringToFront = React.useCallback((imageId) => {
-        var _a;
-        const images = imagesRef.current;
         const image = images.find((img) => img.id === imageId);
         if (!image)
             return;
         const others = images.filter((img) => img.id !== imageId);
-        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, [...others, image]);
-    }, []);
+        onChange === null || onChange === void 0 ? void 0 : onChange([...others, image]);
+    }, [images, onChange]);
     const sendToBack = React.useCallback((imageId) => {
-        var _a;
-        const images = imagesRef.current;
         const image = images.find((img) => img.id === imageId);
         if (!image)
             return;
         const others = images.filter((img) => img.id !== imageId);
-        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, [image, ...others]);
-    }, []);
+        onChange === null || onChange === void 0 ? void 0 : onChange([image, ...others]);
+    }, [images, onChange]);
     const reorderImage = React.useCallback((fromIndex, toIndex) => {
-        var _a;
-        const images = imagesRef.current;
         if (fromIndex < 0 || fromIndex >= images.length)
             return;
         if (toIndex < 0 || toIndex >= images.length)
@@ -390,10 +326,9 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         const newImages = [...images];
         const [moved] = newImages.splice(fromIndex, 1);
         newImages.splice(toIndex, 0, moved);
-        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, newImages);
-    }, []);
-    // Use useMemo to return a stable object reference
-    return React.useMemo(() => ({
+        onChange === null || onChange === void 0 ? void 0 : onChange(newImages);
+    }, [images, onChange]);
+    return {
         selectedId,
         isDragging,
         dragMode,
@@ -406,20 +341,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         sendToBack,
         reorderImage,
         updateImageTransform,
-    }), [
-        selectedId,
-        isDragging,
-        dragMode,
-        handleMouseDown,
-        selectImage,
-        deselectAll,
-        deleteImage,
-        deleteSelected,
-        bringToFront,
-        sendToBack,
-        reorderImage,
-        updateImageTransform,
-    ]);
+    };
 }
 
 const HANDLE_SIZE = 10;
@@ -448,27 +370,9 @@ const rotateHandleStyle = {
     cursor: ROTATE_CURSOR,
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
 };
-const handles = [
-    {
-        position: 'nw',
-        style: { top: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
-    },
-    {
-        position: 'ne',
-        style: { top: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
-    },
-    {
-        position: 'sw',
-        style: { bottom: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
-    },
-    {
-        position: 'se',
-        style: { bottom: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
-    },
-];
-const Controls = React.memo(function Controls({ transform, allowRotation, onMouseDown }) {
+function Controls({ transform, allowRotation, onMouseDown }) {
     const { position, size, rotation } = transform;
-    const containerStyle = React.useMemo(() => ({
+    const containerStyle = {
         position: 'absolute',
         left: position.x,
         top: position.y,
@@ -477,7 +381,25 @@ const Controls = React.memo(function Controls({ transform, allowRotation, onMous
         transform: rotation ? `rotate(${rotation}deg)` : undefined,
         transformOrigin: 'center center',
         pointerEvents: 'none',
-    }), [position.x, position.y, size.width, size.height, rotation]);
+    };
+    const handles = [
+        {
+            position: 'nw',
+            style: { top: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
+        },
+        {
+            position: 'ne',
+            style: { top: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
+        },
+        {
+            position: 'sw',
+            style: { bottom: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
+        },
+        {
+            position: 'se',
+            style: { bottom: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
+        },
+    ];
     const borderStyle = {
         position: 'absolute',
         inset: -1,
@@ -502,7 +424,7 @@ const Controls = React.memo(function Controls({ transform, allowRotation, onMous
                             transform: 'translateX(-50%)',
                             pointerEvents: 'auto',
                         }, onMouseDown: (e) => onMouseDown(e, 'rotate') })] }))] }));
-});
+}
 
 const ITEM_HEIGHT = 56; // Height of each layer item in pixels
 // teniski-varna color palette
@@ -582,16 +504,16 @@ const dragLineStyle = {
     backgroundColor: COLORS$1.GRAY,
     borderRadius: "1px"
 };
-// Plus icon for add button - memoized to prevent recreation
-const PlusIcon = React.memo(() => (jsxRuntime.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsxRuntime.jsx("path", { d: "M8 3v10M3 8h10", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" }) })));
-// Front icon - memoized
-const FrontIcon = React.memo(() => (jsxRuntime.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("path", { d: "M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("circle", { cx: "12", cy: "7", r: "4", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })] })));
-// Back icon - memoized
-const BackIcon = React.memo(() => (jsxRuntime.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("path", { d: "M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("circle", { cx: "12", cy: "7", r: "4", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("path", { d: "M3 3l18 18", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" })] })));
-// Delete icon - memoized
-const DeleteIcon = React.memo(() => (jsxRuntime.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsxRuntime.jsx("path", { d: "M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) })));
-// Empty layers icon - memoized
-const EmptyLayersIcon = React.memo(() => (jsxRuntime.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("path", { d: "M8 1L1 4.5L8 8L15 4.5L8 1Z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("path", { d: "M1 11.5L8 15L15 11.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("path", { d: "M1 8L8 11.5L15 8", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" })] })));
+// Plus icon for add button
+const PlusIcon = () => (jsxRuntime.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsxRuntime.jsx("path", { d: "M8 3v10M3 8h10", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" }) }));
+// Front icon
+const FrontIcon = () => (jsxRuntime.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("path", { d: "M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("circle", { cx: "12", cy: "7", r: "4", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })] }));
+// Back icon
+const BackIcon = () => (jsxRuntime.jsxs("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("path", { d: "M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("circle", { cx: "12", cy: "7", r: "4", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("path", { d: "M3 3l18 18", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round" })] }));
+// Delete icon
+const DeleteIcon = () => (jsxRuntime.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsxRuntime.jsx("path", { d: "M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }));
+// Empty layers icon
+const EmptyLayersIcon = () => (jsxRuntime.jsxs("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("path", { d: "M8 1L1 4.5L8 8L15 4.5L8 1Z", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("path", { d: "M1 11.5L8 15L15 11.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }), jsxRuntime.jsx("path", { d: "M1 8L8 11.5L15 8", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" })] }));
 const addButtonStyle = {
     display: "flex",
     alignItems: "center",
@@ -610,12 +532,11 @@ const addButtonStyle = {
     boxShadow: "0 2px 10px rgba(250, 192, 0, 0.3)",
     transition: "filter 0.1s ease-out, transform 0.1s ease-out"
 };
-const LayerPanel = React.memo(function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange }) {
+function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange }) {
     const [dragState, setDragState] = React.useState(null);
     const listRef = React.useRef(null);
-    const rafRef = React.useRef(null);
-    // Memoize reversed array to prevent recreation on every render
-    const reversedImages = React.useMemo(() => [...images].reverse(), [images]);
+    // Reverse to show top layer first (last in array = top = first in list)
+    const reversedImages = [...images].reverse();
     const handleMouseDown = React.useCallback((e, reversedIndex) => {
         e.preventDefault();
         e.stopPropagation();
@@ -628,25 +549,14 @@ const LayerPanel = React.memo(function LayerPanel({ images, selectedId, onSelect
     const handleMouseMove = React.useCallback((e) => {
         if (!dragState)
             return;
-        // Throttle with RAF for smooth performance
-        if (rafRef.current !== null)
-            return;
-        rafRef.current = requestAnimationFrame(() => {
-            setDragState(prev => prev
-                ? {
-                    ...prev,
-                    currentY: e.clientY
-                }
-                : null);
-            rafRef.current = null;
-        });
+        setDragState(prev => prev
+            ? {
+                ...prev,
+                currentY: e.clientY
+            }
+            : null);
     }, [dragState]);
     const handleMouseUp = React.useCallback(() => {
-        // Cancel any pending RAF
-        if (rafRef.current !== null) {
-            cancelAnimationFrame(rafRef.current);
-            rafRef.current = null;
-        }
         if (!dragState)
             return;
         const deltaY = dragState.currentY - dragState.startY;
@@ -685,12 +595,12 @@ const LayerPanel = React.memo(function LayerPanel({ images, selectedId, onSelect
         let transition = "transform 0.3s ease-out, background-color 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out";
         if (dragState) {
             if (isDragging) {
-                // The dragged item follows the mouse - no transitions during drag
+                // The dragged item follows the mouse
                 const deltaY = dragState.currentY - dragState.startY;
                 transform = `translateY(${deltaY}px) scale(1.02)`;
                 zIndex = 100;
                 boxShadow = "0 8px 24px rgba(0,0,0,0.15), 0 4px 8px rgba(0, 0, 0, 0.1)";
-                transition = "none";
+                transition = "box-shadow 0.3s ease-out";
             }
             else {
                 // Other items shift to make room
@@ -724,8 +634,7 @@ const LayerPanel = React.memo(function LayerPanel({ images, selectedId, onSelect
             transition,
             boxShadow,
             height: `${ITEM_HEIGHT}px`,
-            boxSizing: "border-box",
-            willChange: dragState ? "transform" : "auto"
+            boxSizing: "border-box"
         };
     };
     const thumbnailStyle = {
@@ -797,7 +706,7 @@ const LayerPanel = React.memo(function LayerPanel({ images, selectedId, onSelect
                                     backgroundColor: isDragging ? "#e2e8f0" : "transparent"
                                 }, onMouseDown: e => handleMouseDown(e, reversedIndex), children: [jsxRuntime.jsx("div", { style: dragLineStyle }), jsxRuntime.jsx("div", { style: dragLineStyle }), jsxRuntime.jsx("div", { style: dragLineStyle })] }), jsxRuntime.jsx("img", { src: image.src, alt: `Layer ${originalIndex + 1}`, style: thumbnailStyle, draggable: false }), jsxRuntime.jsxs("span", { style: labelStyle, children: ["\u0421\u043B\u043E\u0439 ", originalIndex + 1] }), jsxRuntime.jsx("button", { style: hoveredDeleteId === image.id ? deleteButtonHoverStyle : deleteButtonStyle, onClick: e => handleDelete(e, image.id), onMouseEnter: () => setHoveredDeleteId(image.id), onMouseLeave: () => setHoveredDeleteId(null), title: "\u0418\u0437\u0442\u0440\u0438\u0439 \u0441\u043B\u043E\u0439", children: jsxRuntime.jsx(DeleteIcon, {}) })] }, image.id));
                 }) }))] }));
-});
+}
 
 // Helper to load an image from a source URL
 function loadImage(src) {
@@ -897,50 +806,8 @@ const DEFAULT_CONFIG = {
     acceptedFileTypes: ["image/png", "image/jpeg", "image/webp", "image/gif"],
     maxFileSize: 10 * 1024 * 1024
 };
-// Memoized image component to prevent re-renders during drag
-const DraggableImage = React.memo(function DraggableImage({ imageData, isSelected, isDragging, hasPrintableArea, onMouseDown, onSelect }) {
-    const { transform } = imageData;
-    const imageStyle = React.useMemo(() => ({
-        position: "absolute",
-        left: transform.position.x,
-        top: transform.position.y,
-        width: transform.size.width,
-        height: transform.size.height,
-        transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
-        transformOrigin: "center center",
-        cursor: isDragging ? "grabbing" : "move",
-        userSelect: "none",
-        pointerEvents: "auto",
-        opacity: hasPrintableArea ? 0 : 1,
-        willChange: isDragging ? "transform, left, top" : "auto"
-    }), [transform.position.x, transform.position.y, transform.size.width, transform.size.height, transform.rotation, isDragging, hasPrintableArea]);
-    return (jsxRuntime.jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false, onMouseDown: onMouseDown, onClick: e => {
-            e.stopPropagation();
-            onSelect();
-        } }));
-});
-// Memoized clipped image for display
-const ClippedImage = React.memo(function ClippedImage({ imageData, printableArea }) {
-    const { transform } = imageData;
-    const imageStyle = React.useMemo(() => ({
-        position: "absolute",
-        left: transform.position.x - printableArea.minX,
-        top: transform.position.y - printableArea.minY,
-        width: transform.size.width,
-        height: transform.size.height,
-        transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
-        transformOrigin: "center center",
-        userSelect: "none",
-        pointerEvents: "none",
-        willChange: "transform, left, top"
-    }), [transform.position.x, transform.position.y, transform.size.width, transform.size.height, transform.rotation, printableArea]);
-    return (jsxRuntime.jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false }));
-});
-const TShirtBuilder = React.memo(function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }) {
-    // Memoize config with deep comparison to prevent unnecessary re-renders
-    // when parent passes inline config objects
-    const configKey = JSON.stringify(configProp);
-    const config = React.useMemo(() => ({ ...DEFAULT_CONFIG, ...configProp }), [configKey]);
+function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }) {
+    const config = { ...DEFAULT_CONFIG, ...configProp };
     const [currentView, setCurrentView] = React.useState("front");
     const [viewImages, setViewImages] = React.useState(initialImages || { front: [], back: [] });
     const [bgImage, setBgImage] = React.useState(null);
@@ -1033,7 +900,7 @@ const TShirtBuilder = React.memo(function TShirtBuilder({ frontBgImage, backBgIm
             deselectAll();
         }
     }, [deselectAll]);
-    const containerStyle = React.useMemo(() => ({
+    const containerStyle = {
         position: "relative",
         width: config.width,
         height: config.height,
@@ -1046,10 +913,9 @@ const TShirtBuilder = React.memo(function TShirtBuilder({ frontBgImage, backBgIm
         userSelect: "none",
         borderRadius: "10px",
         boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-        fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
-        contain: "layout style paint"
-    }), [config.width, config.height, bgImage, currentBackgroundUrl, isDragging, dragMode]);
-    const dropZoneStyle = React.useMemo(() => ({
+        fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
+    };
+    const dropZoneStyle = {
         position: "absolute",
         inset: 0,
         display: "flex",
@@ -1060,7 +926,7 @@ const TShirtBuilder = React.memo(function TShirtBuilder({ frontBgImage, backBgIm
         color: COLORS.GRAY,
         fontSize: "14px",
         pointerEvents: images.length > 0 ? "none" : "auto"
-    }), [images.length]);
+    };
     const [exportButtonHovered, setExportButtonHovered] = React.useState(false);
     const [exportButtonActive, setExportButtonActive] = React.useState(false);
     const exportButtonStyle = {
@@ -1142,9 +1008,41 @@ const TShirtBuilder = React.memo(function TShirtBuilder({ frontBgImage, backBgIm
                                             height: config.printableArea.maxY - config.printableArea.minY,
                                             overflow: "hidden",
                                             pointerEvents: "none"
-                                        }, children: images.map(imageData => (jsxRuntime.jsx(ClippedImage, { imageData: imageData, printableArea: config.printableArea }, imageData.id))) })), images.map(imageData => {
+                                        }, children: images.map(imageData => {
+                                            const { transform } = imageData;
+                                            // Adjust position relative to printable area
+                                            const imageStyle = {
+                                                position: "absolute",
+                                                left: transform.position.x - config.printableArea.minX,
+                                                top: transform.position.y - config.printableArea.minY,
+                                                width: transform.size.width,
+                                                height: transform.size.height,
+                                                transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
+                                                transformOrigin: "center center",
+                                                userSelect: "none",
+                                                pointerEvents: "none"
+                                            };
+                                            return (jsxRuntime.jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false }, imageData.id));
+                                        }) })), images.map(imageData => {
+                                        const { transform } = imageData;
                                         const isSelected = imageData.id === selectedId;
-                                        return (jsxRuntime.jsxs(React.Fragment, { children: [jsxRuntime.jsx(DraggableImage, { imageData: imageData, isSelected: isSelected, isDragging: isDragging, hasPrintableArea: !!config.printableArea, onMouseDown: e => handleMouseDown(e, imageData.id, "move"), onSelect: () => selectImage(imageData.id) }), isSelected && (jsxRuntime.jsx(Controls, { transform: imageData.transform, allowRotation: config.allowRotation || false, onMouseDown: (e, mode, handle) => handleMouseDown(e, imageData.id, mode, handle) }))] }, imageData.id));
+                                        const imageStyle = {
+                                            position: "absolute",
+                                            left: transform.position.x,
+                                            top: transform.position.y,
+                                            width: transform.size.width,
+                                            height: transform.size.height,
+                                            transform: transform.rotation ? `rotate(${transform.rotation}deg)` : undefined,
+                                            transformOrigin: "center center",
+                                            cursor: isDragging ? "grabbing" : "move",
+                                            userSelect: "none",
+                                            pointerEvents: "auto",
+                                            opacity: config.printableArea ? 0 : 1
+                                        };
+                                        return (jsxRuntime.jsxs(React.Fragment, { children: [jsxRuntime.jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false, onMouseDown: e => handleMouseDown(e, imageData.id, "move"), onClick: e => {
+                                                        e.stopPropagation();
+                                                        selectImage(imageData.id);
+                                                    } }), isSelected && (jsxRuntime.jsx(Controls, { transform: transform, allowRotation: config.allowRotation || false, onMouseDown: (e, mode, handle) => handleMouseDown(e, imageData.id, mode, handle) }))] }, imageData.id));
                                     }), config.printableArea && (jsxRuntime.jsx("div", { style: {
                                             position: "absolute",
                                             left: config.printableArea.minX,
@@ -1159,7 +1057,7 @@ const TShirtBuilder = React.memo(function TShirtBuilder({ frontBgImage, backBgIm
                                     setExportButtonHovered(false);
                                     setExportButtonActive(false);
                                 }, onMouseDown: () => setExportButtonActive(true), onMouseUp: () => setExportButtonActive(false), children: [jsxRuntime.jsx("svg", { width: "18", height: "18", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsxRuntime.jsx("path", { d: "M14 10v2.667A1.334 1.334 0 0112.667 14H3.333A1.334 1.334 0 012 12.667V10M4.667 6.667L8 3.333l3.333 3.334M8 3.333V10", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }), "\u0417\u0430\u0432\u044A\u0440\u0448\u0438 \u0434\u0438\u0437\u0430\u0439\u043D"] }))] })] }), jsxRuntime.jsx("input", { ref: inputRef, type: "file", accept: acceptedTypes.join(","), onChange: handleFileChange, style: { display: "none" } })] }));
-});
+}
 
 exports.Controls = Controls;
 exports.LayerPanel = LayerPanel;

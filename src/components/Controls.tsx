@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import type { ImageTransform, ControlHandle, DragMode } from '../types';
 
 interface ControlsProps {
@@ -41,32 +41,10 @@ const rotateHandleStyle: React.CSSProperties = {
   boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
 };
 
-const handles: Array<{
-  position: ControlHandle['position'];
-  style: React.CSSProperties;
-}> = [
-  {
-    position: 'nw',
-    style: { top: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
-  },
-  {
-    position: 'ne',
-    style: { top: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
-  },
-  {
-    position: 'sw',
-    style: { bottom: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
-  },
-  {
-    position: 'se',
-    style: { bottom: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
-  },
-];
-
-export const Controls = memo(function Controls({ transform, allowRotation, onMouseDown }: ControlsProps) {
+export function Controls({ transform, allowRotation, onMouseDown }: ControlsProps) {
   const { position, size, rotation } = transform;
 
-  const containerStyle: React.CSSProperties = useMemo(() => ({
+  const containerStyle: React.CSSProperties = {
     position: 'absolute',
     left: position.x,
     top: position.y,
@@ -75,7 +53,29 @@ export const Controls = memo(function Controls({ transform, allowRotation, onMou
     transform: rotation ? `rotate(${rotation}deg)` : undefined,
     transformOrigin: 'center center',
     pointerEvents: 'none',
-  }), [position.x, position.y, size.width, size.height, rotation]);
+  };
+
+  const handles: Array<{
+    position: ControlHandle['position'];
+    style: React.CSSProperties;
+  }> = [
+    {
+      position: 'nw',
+      style: { top: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
+    },
+    {
+      position: 'ne',
+      style: { top: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
+    },
+    {
+      position: 'sw',
+      style: { bottom: -HANDLE_SIZE / 2, left: -HANDLE_SIZE / 2, cursor: 'nesw-resize' },
+    },
+    {
+      position: 'se',
+      style: { bottom: -HANDLE_SIZE / 2, right: -HANDLE_SIZE / 2, cursor: 'nwse-resize' },
+    },
+  ];
 
   const borderStyle: React.CSSProperties = {
     position: 'absolute',
@@ -128,4 +128,4 @@ export const Controls = memo(function Controls({ transform, allowRotation, onMou
       )}
     </div>
   );
-});
+}

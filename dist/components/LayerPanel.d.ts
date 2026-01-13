@@ -1,4 +1,3 @@
-import React from "react";
 import type { ImageData, TShirtView } from "../types";
 interface LayerPanelProps {
     images: ImageData[];
@@ -10,5 +9,5 @@ interface LayerPanelProps {
     currentView: TShirtView;
     onViewChange: (view: TShirtView) => void;
 }
-export declare const LayerPanel: React.NamedExoticComponent<LayerPanelProps>;
+export declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange }: LayerPanelProps): import("react/jsx-runtime").JSX.Element;
 export {};

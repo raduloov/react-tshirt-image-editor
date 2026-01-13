@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import type { ImageData, TShirtView } from "../types";
 
 interface LayerPanelProps {
@@ -24,27 +24,6 @@ const COLORS = {
   DARK_GRAY: "#4A4A4A",
   RED: "#FF0000"
 };
-
-// Layer icon component
-const LayerIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8 1L1 4.5L8 8L15 4.5L8 1Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M1 11.5L8 15L15 11.5"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path d="M1 8L8 11.5L15 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 const panelStyle: React.CSSProperties = {
   width: "220px",
@@ -121,15 +100,15 @@ const dragLineStyle: React.CSSProperties = {
   borderRadius: "1px"
 };
 
-// Plus icon for add button - memoized to prevent recreation
-const PlusIcon = memo(() => (
+// Plus icon for add button
+const PlusIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
-));
+);
 
-// Front icon - memoized
-const FrontIcon = memo(() => (
+// Front icon
+const FrontIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2"
@@ -140,10 +119,10 @@ const FrontIcon = memo(() => (
     />
     <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
-));
+);
 
-// Back icon - memoized
-const BackIcon = memo(() => (
+// Back icon
+const BackIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M20 21V19a4 4 0 00-4-4H8a4 4 0 00-4 4v2"
@@ -155,10 +134,10 @@ const BackIcon = memo(() => (
     <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
-));
+);
 
-// Delete icon - memoized
-const DeleteIcon = memo(() => (
+// Delete icon
+const DeleteIcon = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z"
@@ -168,10 +147,10 @@ const DeleteIcon = memo(() => (
       strokeLinejoin="round"
     />
   </svg>
-));
+);
 
-// Empty layers icon - memoized
-const EmptyLayersIcon = memo(() => (
+// Empty layers icon
+const EmptyLayersIcon = () => (
   <svg width="24" height="24" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M8 1L1 4.5L8 8L15 4.5L8 1Z"
@@ -195,7 +174,7 @@ const EmptyLayersIcon = memo(() => (
       strokeLinejoin="round"
     />
   </svg>
-));
+);
 
 const addButtonStyle: React.CSSProperties = {
   display: "flex",
@@ -216,7 +195,7 @@ const addButtonStyle: React.CSSProperties = {
   transition: "filter 0.1s ease-out, transform 0.1s ease-out"
 };
 
-export const LayerPanel = memo(function LayerPanel({
+export function LayerPanel({
   images,
   selectedId,
   onSelect,
@@ -233,10 +212,9 @@ export const LayerPanel = memo(function LayerPanel({
   } | null>(null);
 
   const listRef = useRef<HTMLUListElement>(null);
-  const rafRef = useRef<number | null>(null);
 
-  // Memoize reversed array to prevent recreation on every render
-  const reversedImages = useMemo(() => [...images].reverse(), [images]);
+  // Reverse to show top layer first (last in array = top = first in list)
+  const reversedImages = [...images].reverse();
 
   const handleMouseDown = useCallback((e: React.MouseEvent, reversedIndex: number) => {
     e.preventDefault();
@@ -253,31 +231,19 @@ export const LayerPanel = memo(function LayerPanel({
     (e: MouseEvent) => {
       if (!dragState) return;
 
-      // Throttle with RAF for smooth performance
-      if (rafRef.current !== null) return;
-
-      rafRef.current = requestAnimationFrame(() => {
-        setDragState(prev =>
-          prev
-            ? {
-                ...prev,
-                currentY: e.clientY
-              }
-            : null
-        );
-        rafRef.current = null;
-      });
+      setDragState(prev =>
+        prev
+          ? {
+              ...prev,
+              currentY: e.clientY
+            }
+          : null
+      );
     },
     [dragState]
   );
 
   const handleMouseUp = useCallback(() => {
-    // Cancel any pending RAF
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-
     if (!dragState) return;
 
     const deltaY = dragState.currentY - dragState.startY;
@@ -325,12 +291,12 @@ export const LayerPanel = memo(function LayerPanel({
 
     if (dragState) {
       if (isDragging) {
-        // The dragged item follows the mouse - no transitions during drag
+        // The dragged item follows the mouse
         const deltaY = dragState.currentY - dragState.startY;
         transform = `translateY(${deltaY}px) scale(1.02)`;
         zIndex = 100;
         boxShadow = "0 8px 24px rgba(0,0,0,0.15), 0 4px 8px rgba(0, 0, 0, 0.1)";
-        transition = "none";
+        transition = "box-shadow 0.3s ease-out";
       } else {
         // Other items shift to make room
         const draggedIndex = dragState.draggingIndex;
@@ -364,8 +330,7 @@ export const LayerPanel = memo(function LayerPanel({
       transition,
       boxShadow,
       height: `${ITEM_HEIGHT}px`,
-      boxSizing: "border-box",
-      willChange: dragState ? "transform" : "auto"
+      boxSizing: "border-box"
     };
   };
 
@@ -511,4 +476,4 @@ export const LayerPanel = memo(function LayerPanel({
       )}
     </div>
   );
-});
+}
