@@ -114,11 +114,26 @@ function useImageUpload({ config, onImageLoad, onError }) {
     };
 }
 
+// Calculate distance between two touch points
+function getTouchDistance(touch1, touch2) {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+// Calculate center point between two touches
+function getTouchCenter(touch1, touch2) {
+    return {
+        x: (touch1.clientX + touch2.clientX) / 2,
+        y: (touch1.clientY + touch2.clientY) / 2,
+    };
+}
 function useImageTransform({ images, config, containerRef, onChange }) {
     const [selectedId, setSelectedId] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [dragMode, setDragMode] = useState(null);
     const dragStateRef = useRef(null);
+    const pinchStateRef = useRef(null);
+    const [isPinching, setIsPinching] = useState(false);
     // Auto-select newly added image
     useEffect(() => {
         if (images.length > 0 && !selectedId) {
@@ -149,12 +164,15 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         const updatedImages = images.map((img) => img.id === imageId ? { ...img, transform: clamped } : img);
         onChange === null || onChange === void 0 ? void 0 : onChange(updatedImages);
     }, [clampTransform, images, onChange]);
-    const handleMouseDown = useCallback((event, imageId, mode, handle) => {
+    const handlePointerDown = useCallback((event, imageId, mode, handle) => {
         const image = images.find((img) => img.id === imageId);
         if (!image)
             return;
         event.preventDefault();
         event.stopPropagation();
+        // Capture pointer for reliable tracking across touch/mouse
+        const element = event.currentTarget;
+        element.setPointerCapture(event.pointerId);
         setSelectedId(imageId);
         setIsDragging(true);
         setDragMode(mode);
@@ -164,11 +182,16 @@ function useImageTransform({ images, config, containerRef, onChange }) {
             startPosition: { x: event.clientX, y: event.clientY },
             startTransform: { ...image.transform },
             handle,
+            pointerId: event.pointerId,
+            element,
         };
     }, [images]);
-    const handleMouseMove = useCallback((event) => {
+    const handlePointerMove = useCallback((event) => {
         const dragState = dragStateRef.current;
         if (!dragState)
+            return;
+        // Only process events for our captured pointer
+        if (dragState.pointerId !== undefined && event.pointerId !== dragState.pointerId)
             return;
         const image = images.find((img) => img.id === dragState.imageId);
         if (!image)
@@ -249,7 +272,7 @@ function useImageTransform({ images, config, containerRef, onChange }) {
                     dragState.startTransform.size.width / 2;
                 const centerY = dragState.startTransform.position.y +
                     dragState.startTransform.size.height / 2;
-                // Convert mouse positions to local coordinates
+                // Convert pointer positions to local coordinates
                 const startLocalX = dragState.startPosition.x - rect.left;
                 const startLocalY = dragState.startPosition.y - rect.top;
                 const currentLocalX = event.clientX - rect.left;
@@ -269,22 +292,125 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         }
         updateImageTransform(dragState.imageId, newTransform);
     }, [images, config.minImageSize, config.allowRotation, containerRef, updateImageTransform]);
-    const handleMouseUp = useCallback(() => {
+    const handlePointerUp = useCallback((event) => {
+        const dragState = dragStateRef.current;
+        // Release pointer capture if we have it
+        if ((dragState === null || dragState === void 0 ? void 0 : dragState.element) && (dragState === null || dragState === void 0 ? void 0 : dragState.pointerId) !== undefined) {
+            try {
+                dragState.element.releasePointerCapture(dragState.pointerId);
+            }
+            catch (_a) {
+                // Pointer capture may already be released
+            }
+        }
         setIsDragging(false);
         setDragMode(null);
         dragStateRef.current = null;
     }, []);
-    // Attach global mouse events when dragging
+    // Pinch gesture handlers for two-finger scaling
+    const handleTouchStart = useCallback((event, imageId) => {
+        // Only handle pinch when we have exactly 2 touches
+        if (event.touches.length !== 2)
+            return;
+        const image = images.find((img) => img.id === imageId);
+        if (!image)
+            return;
+        event.preventDefault();
+        event.stopPropagation();
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const distance = getTouchDistance(touch1, touch2);
+        const center = getTouchCenter(touch1, touch2);
+        setSelectedId(imageId);
+        setIsPinching(true);
+        // Cancel any ongoing drag
+        if (dragStateRef.current) {
+            setIsDragging(false);
+            setDragMode(null);
+            dragStateRef.current = null;
+        }
+        pinchStateRef.current = {
+            imageId,
+            startDistance: distance,
+            startTransform: { ...image.transform },
+            startCenter: center,
+        };
+    }, [images]);
+    const handleTouchMove = useCallback((event) => {
+        const pinchState = pinchStateRef.current;
+        if (!pinchState || event.touches.length !== 2)
+            return;
+        const image = images.find((img) => img.id === pinchState.imageId);
+        if (!image)
+            return;
+        event.preventDefault();
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const currentDistance = getTouchDistance(touch1, touch2);
+        const currentCenter = getTouchCenter(touch1, touch2);
+        // Calculate scale factor
+        const scale = currentDistance / pinchState.startDistance;
+        // Calculate new size maintaining aspect ratio
+        const aspectRatio = image.naturalWidth / image.naturalHeight;
+        const minSize = config.minImageSize || 20;
+        const newWidth = Math.max(minSize, pinchState.startTransform.size.width * scale);
+        const newHeight = newWidth / aspectRatio;
+        // Get container rect to convert center coordinates
+        const container = containerRef.current;
+        if (!container)
+            return;
+        const rect = container.getBoundingClientRect();
+        // Calculate center movement (for panning while pinching)
+        const centerDeltaX = currentCenter.x - pinchState.startCenter.x;
+        const centerDeltaY = currentCenter.y - pinchState.startCenter.y;
+        // Calculate the image center in container coordinates
+        const startImageCenterX = pinchState.startTransform.position.x + pinchState.startTransform.size.width / 2;
+        const startImageCenterY = pinchState.startTransform.position.y + pinchState.startTransform.size.height / 2;
+        // Scale around the pinch center point
+        const pinchCenterX = pinchState.startCenter.x - rect.left;
+        const pinchCenterY = pinchState.startCenter.y - rect.top;
+        // Calculate new position to keep the pinch center stable
+        const newCenterX = pinchCenterX + (startImageCenterX - pinchCenterX) * scale + centerDeltaX;
+        const newCenterY = pinchCenterY + (startImageCenterY - pinchCenterY) * scale + centerDeltaY;
+        const newX = newCenterX - newWidth / 2;
+        const newY = newCenterY - newHeight / 2;
+        const newTransform = {
+            position: { x: newX, y: newY },
+            size: { width: newWidth, height: newHeight },
+            rotation: pinchState.startTransform.rotation,
+        };
+        updateImageTransform(pinchState.imageId, newTransform);
+    }, [images, config.minImageSize, containerRef, updateImageTransform]);
+    const handleTouchEnd = useCallback(() => {
+        setIsPinching(false);
+        pinchStateRef.current = null;
+    }, []);
+    // Attach global pointer events when dragging
     useEffect(() => {
         if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('pointermove', handlePointerMove);
+            window.addEventListener('pointerup', handlePointerUp);
+            window.addEventListener('pointercancel', handlePointerUp);
             return () => {
-                window.removeEventListener('mousemove', handleMouseMove);
-                window.removeEventListener('mouseup', handleMouseUp);
+                window.removeEventListener('pointermove', handlePointerMove);
+                window.removeEventListener('pointerup', handlePointerUp);
+                window.removeEventListener('pointercancel', handlePointerUp);
             };
         }
-    }, [isDragging, handleMouseMove, handleMouseUp]);
+    }, [isDragging, handlePointerMove, handlePointerUp]);
+    // Attach global touch events when pinching
+    useEffect(() => {
+        if (isPinching) {
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+            window.addEventListener('touchend', handleTouchEnd);
+            window.addEventListener('touchcancel', handleTouchEnd);
+            return () => {
+                window.removeEventListener('touchmove', handleTouchMove);
+                window.removeEventListener('touchend', handleTouchEnd);
+                window.removeEventListener('touchcancel', handleTouchEnd);
+            };
+        }
+    }, [isPinching, handleTouchMove, handleTouchEnd]);
     const selectImage = useCallback((imageId) => {
         setSelectedId(imageId);
     }, []);
@@ -329,8 +455,10 @@ function useImageTransform({ images, config, containerRef, onChange }) {
     return {
         selectedId,
         isDragging,
+        isPinching,
         dragMode,
-        handleMouseDown,
+        handlePointerDown,
+        handleTouchStart,
         selectImage,
         deselectAll,
         deleteImage,
@@ -356,6 +484,8 @@ const handleStyle = {
     boxSizing: 'border-box',
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
     transition: 'transform 0.3s ease-out, box-shadow 0.3s ease-out',
+    // Prevent touch behaviors on handles
+    touchAction: 'none',
 };
 const rotateHandleStyle = {
     position: 'absolute',
@@ -367,8 +497,10 @@ const rotateHandleStyle = {
     boxSizing: 'border-box',
     cursor: ROTATE_CURSOR,
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+    // Prevent touch behaviors on rotate handle
+    touchAction: 'none',
 };
-function Controls({ transform, allowRotation, onMouseDown }) {
+function Controls({ transform, allowRotation, onPointerDown }) {
     const { position, size, rotation } = transform;
     const containerStyle = {
         position: 'absolute',
@@ -406,7 +538,7 @@ function Controls({ transform, allowRotation, onMouseDown }) {
         pointerEvents: 'none',
         boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
     };
-    return (jsxs("div", { style: containerStyle, children: [jsx("div", { style: borderStyle }), handles.map(({ position: pos, style }) => (jsx("div", { style: { ...handleStyle, ...style, pointerEvents: 'auto' }, onMouseDown: (e) => onMouseDown(e, 'resize', pos) }, pos))), allowRotation && (jsxs(Fragment, { children: [jsx("div", { style: {
+    return (jsxs("div", { style: containerStyle, children: [jsx("div", { style: borderStyle }), handles.map(({ position: pos, style }) => (jsx("div", { style: { ...handleStyle, ...style, pointerEvents: 'auto' }, onPointerDown: (e) => onPointerDown(e, 'resize', pos), onContextMenu: (e) => e.preventDefault() }, pos))), allowRotation && (jsxs(Fragment, { children: [jsx("div", { style: {
                             position: 'absolute',
                             top: -28,
                             left: '50%',
@@ -421,7 +553,7 @@ function Controls({ transform, allowRotation, onMouseDown }) {
                             left: '50%',
                             transform: 'translateX(-50%)',
                             pointerEvents: 'auto',
-                        }, onMouseDown: (e) => onMouseDown(e, 'rotate') })] }))] }));
+                        }, onPointerDown: (e) => onPointerDown(e, 'rotate'), onContextMenu: (e) => e.preventDefault() })] }))] }));
 }
 
 const ITEM_HEIGHT = 56; // Height of each layer item in pixels
@@ -441,7 +573,9 @@ const panelStyle = {
     borderRadius: "10px",
     overflow: "hidden",
     boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-    fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
+    fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
+    // Prevent double-tap zoom on the panel
+    touchAction: "manipulation"
 };
 const headerStyle = {
     display: "flex",
@@ -494,7 +628,9 @@ const dragHandleStyle = {
     cursor: "grab",
     padding: "6px 4px",
     borderRadius: "4px",
-    transition: "background-color 0.3s ease-out"
+    transition: "background-color 0.3s ease-out",
+    // Prevent touch behaviors on drag handle
+    touchAction: "none"
 };
 const dragLineStyle = {
     width: "10px",
@@ -535,17 +671,25 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
     const listRef = useRef(null);
     // Reverse to show top layer first (last in array = top = first in list)
     const reversedImages = [...images].reverse();
-    const handleMouseDown = useCallback((e, reversedIndex) => {
+    const handlePointerDown = useCallback((e, reversedIndex) => {
         e.preventDefault();
         e.stopPropagation();
+        // Capture pointer for reliable tracking across touch/mouse
+        const element = e.currentTarget;
+        element.setPointerCapture(e.pointerId);
         setDragState({
             draggingIndex: reversedIndex,
             startY: e.clientY,
-            currentY: e.clientY
+            currentY: e.clientY,
+            pointerId: e.pointerId,
+            element
         });
     }, []);
-    const handleMouseMove = useCallback((e) => {
+    const handlePointerMove = useCallback((e) => {
         if (!dragState)
+            return;
+        // Only process events for our captured pointer
+        if (dragState.pointerId !== undefined && e.pointerId !== dragState.pointerId)
             return;
         setDragState(prev => prev
             ? {
@@ -554,9 +698,18 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
             }
             : null);
     }, [dragState]);
-    const handleMouseUp = useCallback(() => {
+    const handlePointerUp = useCallback(() => {
         if (!dragState)
             return;
+        // Release pointer capture if we have it
+        if (dragState.element && dragState.pointerId !== undefined) {
+            try {
+                dragState.element.releasePointerCapture(dragState.pointerId);
+            }
+            catch (_a) {
+                // Pointer capture may already be released
+            }
+        }
         const deltaY = dragState.currentY - dragState.startY;
         const indexDelta = Math.round(deltaY / ITEM_HEIGHT);
         const newReversedIndex = Math.max(0, Math.min(reversedImages.length - 1, dragState.draggingIndex + indexDelta));
@@ -570,14 +723,16 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
     }, [dragState, reversedImages.length, images.length, onReorder]);
     useEffect(() => {
         if (dragState) {
-            window.addEventListener("mousemove", handleMouseMove);
-            window.addEventListener("mouseup", handleMouseUp);
+            window.addEventListener("pointermove", handlePointerMove);
+            window.addEventListener("pointerup", handlePointerUp);
+            window.addEventListener("pointercancel", handlePointerUp);
             return () => {
-                window.removeEventListener("mousemove", handleMouseMove);
-                window.removeEventListener("mouseup", handleMouseUp);
+                window.removeEventListener("pointermove", handlePointerMove);
+                window.removeEventListener("pointerup", handlePointerUp);
+                window.removeEventListener("pointercancel", handlePointerUp);
             };
         }
-    }, [dragState, handleMouseMove, handleMouseUp]);
+    }, [dragState, handlePointerMove, handlePointerUp]);
     const handleDelete = (e, id) => {
         e.stopPropagation();
         onDelete(id);
@@ -702,7 +857,7 @@ function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddIm
                                     ...dragHandleStyle,
                                     cursor: isDragging ? "grabbing" : "grab",
                                     backgroundColor: isDragging ? "#e2e8f0" : "transparent"
-                                }, onMouseDown: e => handleMouseDown(e, reversedIndex), children: [jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle })] }), jsx("img", { src: image.src, alt: `Layer ${originalIndex + 1}`, style: thumbnailStyle, draggable: false }), jsxs("span", { style: labelStyle, children: ["\u0421\u043B\u043E\u0439 ", originalIndex + 1] }), jsx("button", { style: hoveredDeleteId === image.id ? deleteButtonHoverStyle : deleteButtonStyle, onClick: e => handleDelete(e, image.id), onMouseEnter: () => setHoveredDeleteId(image.id), onMouseLeave: () => setHoveredDeleteId(null), title: "\u0418\u0437\u0442\u0440\u0438\u0439 \u0441\u043B\u043E\u0439", children: jsx(DeleteIcon, {}) })] }, image.id));
+                                }, onPointerDown: e => handlePointerDown(e, reversedIndex), onContextMenu: e => e.preventDefault(), children: [jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle }), jsx("div", { style: dragLineStyle })] }), jsx("img", { src: image.src, alt: `Layer ${originalIndex + 1}`, style: thumbnailStyle, draggable: false }), jsxs("span", { style: labelStyle, children: ["\u0421\u043B\u043E\u0439 ", originalIndex + 1] }), jsx("button", { style: hoveredDeleteId === image.id ? deleteButtonHoverStyle : deleteButtonStyle, onClick: e => handleDelete(e, image.id), onMouseEnter: () => setHoveredDeleteId(image.id), onMouseLeave: () => setHoveredDeleteId(null), title: "\u0418\u0437\u0442\u0440\u0438\u0439 \u0441\u043B\u043E\u0439", children: jsx(DeleteIcon, {}) })] }, image.id));
                 }) }))] }));
 }
 
@@ -848,7 +1003,7 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
         onImageLoad: handleImageLoad,
         onError: setError
     });
-    const { selectedId, isDragging, dragMode, handleMouseDown, selectImage, deselectAll, deleteImage, deleteSelected, reorderImage } = useImageTransform({
+    const { selectedId, isDragging, isPinching, dragMode, handlePointerDown, handleTouchStart, selectImage, deselectAll, deleteImage, deleteSelected, reorderImage } = useImageTransform({
         images,
         config,
         containerRef,
@@ -907,11 +1062,13 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
         backgroundSize: "cover",
         backgroundPosition: "center",
         overflow: "hidden",
-        cursor: isDragging && dragMode !== 'rotate' ? "grabbing" : "default",
+        cursor: (isDragging && dragMode !== 'rotate') || isPinching ? "grabbing" : "default",
         userSelect: "none",
         borderRadius: "10px",
         boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-        fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
+        fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
+        // Prevent browser touch behaviors during interaction
+        touchAction: "none"
     };
     const dropZoneStyle = {
         position: "absolute",
@@ -1035,12 +1192,14 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
                                             cursor: isDragging ? "grabbing" : "move",
                                             userSelect: "none",
                                             pointerEvents: "auto",
-                                            opacity: config.printableArea ? 0 : 1
+                                            opacity: config.printableArea ? 0 : 1,
+                                            // Prevent touch behaviors on image
+                                            touchAction: "none"
                                         };
-                                        return (jsxs(React.Fragment, { children: [jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false, onMouseDown: e => handleMouseDown(e, imageData.id, "move"), onClick: e => {
+                                        return (jsxs(React.Fragment, { children: [jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false, onPointerDown: e => handlePointerDown(e, imageData.id, "move"), onTouchStart: e => handleTouchStart(e, imageData.id), onClick: e => {
                                                         e.stopPropagation();
                                                         selectImage(imageData.id);
-                                                    } }), isSelected && (jsx(Controls, { transform: transform, allowRotation: config.allowRotation || false, onMouseDown: (e, mode, handle) => handleMouseDown(e, imageData.id, mode, handle) }))] }, imageData.id));
+                                                    }, onContextMenu: e => e.preventDefault() }), isSelected && (jsx(Controls, { transform: transform, allowRotation: config.allowRotation || false, onPointerDown: (e, mode, handle) => handlePointerDown(e, imageData.id, mode, handle) }))] }, imageData.id));
                                     }), config.printableArea && (jsx("div", { style: {
                                             position: "absolute",
                                             left: config.printableArea.minX,

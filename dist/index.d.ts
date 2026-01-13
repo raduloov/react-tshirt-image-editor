@@ -90,9 +90,9 @@ declare function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, 
 interface ControlsProps {
     transform: ImageTransform;
     allowRotation: boolean;
-    onMouseDown: (event: React__default.MouseEvent, mode: DragMode, handle?: ControlHandle['position']) => void;
+    onPointerDown: (event: React__default.PointerEvent, mode: DragMode, handle?: ControlHandle['position']) => void;
 }
-declare function Controls({ transform, allowRotation, onMouseDown }: ControlsProps): react_jsx_runtime.JSX.Element;
+declare function Controls({ transform, allowRotation, onPointerDown }: ControlsProps): react_jsx_runtime.JSX.Element;
 
 interface LayerPanelProps {
     images: ImageData[];
@@ -129,8 +129,10 @@ interface UseImageTransformOptions {
 declare function useImageTransform({ images, config, containerRef, onChange }: UseImageTransformOptions): {
     selectedId: string | null;
     isDragging: boolean;
+    isPinching: boolean;
     dragMode: DragMode;
-    handleMouseDown: (event: React.MouseEvent, imageId: string, mode: DragMode, handle?: ControlHandle["position"]) => void;
+    handlePointerDown: (event: React.PointerEvent, imageId: string, mode: DragMode, handle?: ControlHandle["position"]) => void;
+    handleTouchStart: (event: React.TouchEvent, imageId: string) => void;
     selectImage: (imageId: string | null) => void;
     deselectAll: () => void;
     deleteImage: (imageId: string) => void;

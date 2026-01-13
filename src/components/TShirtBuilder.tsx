@@ -96,8 +96,10 @@ export function TShirtBuilder({
   const {
     selectedId,
     isDragging,
+    isPinching,
     dragMode,
-    handleMouseDown,
+    handlePointerDown,
+    handleTouchStart,
     selectImage,
     deselectAll,
     deleteImage,
@@ -174,11 +176,13 @@ export function TShirtBuilder({
     backgroundSize: "cover",
     backgroundPosition: "center",
     overflow: "hidden",
-    cursor: isDragging && dragMode !== 'rotate' ? "grabbing" : "default",
+    cursor: (isDragging && dragMode !== 'rotate') || isPinching ? "grabbing" : "default",
     userSelect: "none",
     borderRadius: "10px",
     boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-    fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
+    fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
+    // Prevent browser touch behaviors during interaction
+    touchAction: "none"
   };
 
   const dropZoneStyle: React.CSSProperties = {
@@ -405,7 +409,9 @@ export function TShirtBuilder({
                 cursor: isDragging ? "grabbing" : "move",
                 userSelect: "none",
                 pointerEvents: "auto",
-                opacity: config.printableArea ? 0 : 1
+                opacity: config.printableArea ? 0 : 1,
+                // Prevent touch behaviors on image
+                touchAction: "none"
               };
 
               return (
@@ -415,17 +421,19 @@ export function TShirtBuilder({
                     alt="Качен дизайн"
                     style={imageStyle}
                     draggable={false}
-                    onMouseDown={e => handleMouseDown(e, imageData.id, "move")}
+                    onPointerDown={e => handlePointerDown(e, imageData.id, "move")}
+                    onTouchStart={e => handleTouchStart(e, imageData.id)}
                     onClick={e => {
                       e.stopPropagation();
                       selectImage(imageData.id);
                     }}
+                    onContextMenu={e => e.preventDefault()}
                   />
                   {isSelected && (
                     <Controls
                       transform={transform}
                       allowRotation={config.allowRotation || false}
-                      onMouseDown={(e, mode, handle) => handleMouseDown(e, imageData.id, mode, handle)}
+                      onPointerDown={(e, mode, handle) => handlePointerDown(e, imageData.id, mode, handle)}
                     />
                   )}
                 </React.Fragment>

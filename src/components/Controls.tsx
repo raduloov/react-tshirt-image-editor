@@ -4,8 +4,8 @@ import type { ImageTransform, ControlHandle, DragMode } from '../types';
 interface ControlsProps {
   transform: ImageTransform;
   allowRotation: boolean;
-  onMouseDown: (
-    event: React.MouseEvent,
+  onPointerDown: (
+    event: React.PointerEvent,
     mode: DragMode,
     handle?: ControlHandle['position']
   ) => void;
@@ -27,6 +27,8 @@ const handleStyle: React.CSSProperties = {
   boxSizing: 'border-box',
   boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
   transition: 'transform 0.3s ease-out, box-shadow 0.3s ease-out',
+  // Prevent touch behaviors on handles
+  touchAction: 'none',
 };
 
 const rotateHandleStyle: React.CSSProperties = {
@@ -39,9 +41,11 @@ const rotateHandleStyle: React.CSSProperties = {
   boxSizing: 'border-box',
   cursor: ROTATE_CURSOR,
   boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+  // Prevent touch behaviors on rotate handle
+  touchAction: 'none',
 };
 
-export function Controls({ transform, allowRotation, onMouseDown }: ControlsProps) {
+export function Controls({ transform, allowRotation, onPointerDown }: ControlsProps) {
   const { position, size, rotation } = transform;
 
   const containerStyle: React.CSSProperties = {
@@ -95,7 +99,8 @@ export function Controls({ transform, allowRotation, onMouseDown }: ControlsProp
         <div
           key={pos}
           style={{ ...handleStyle, ...style, pointerEvents: 'auto' }}
-          onMouseDown={(e) => onMouseDown(e, 'resize', pos)}
+          onPointerDown={(e) => onPointerDown(e, 'resize', pos)}
+          onContextMenu={(e) => e.preventDefault()}
         />
       ))}
 
@@ -122,7 +127,8 @@ export function Controls({ transform, allowRotation, onMouseDown }: ControlsProp
               transform: 'translateX(-50%)',
               pointerEvents: 'auto',
             }}
-            onMouseDown={(e) => onMouseDown(e, 'rotate')}
+            onPointerDown={(e) => onPointerDown(e, 'rotate')}
+            onContextMenu={(e) => e.preventDefault()}
           />
         </>
       )}

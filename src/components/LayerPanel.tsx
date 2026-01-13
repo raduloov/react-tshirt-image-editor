@@ -31,7 +31,9 @@ const panelStyle: React.CSSProperties = {
   borderRadius: "10px",
   overflow: "hidden",
   boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-  fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
+  fontFamily: "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
+  // Prevent double-tap zoom on the panel
+  touchAction: "manipulation"
 };
 
 const headerStyle: React.CSSProperties = {
@@ -90,7 +92,9 @@ const dragHandleStyle: React.CSSProperties = {
   cursor: "grab",
   padding: "6px 4px",
   borderRadius: "4px",
-  transition: "background-color 0.3s ease-out"
+  transition: "background-color 0.3s ease-out",
+  // Prevent touch behaviors on drag handle
+  touchAction: "none"
 };
 
 const dragLineStyle: React.CSSProperties = {
@@ -209,6 +213,8 @@ export function LayerPanel({
     draggingIndex: number;
     startY: number;
     currentY: number;
+    pointerId?: number;
+    element?: HTMLElement;
   } | null>(null);
 
   const listRef = useRef<HTMLUListElement>(null);
@@ -216,20 +222,29 @@ export function LayerPanel({
   // Reverse to show top layer first (last in array = top = first in list)
   const reversedImages = [...images].reverse();
 
-  const handleMouseDown = useCallback((e: React.MouseEvent, reversedIndex: number) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent, reversedIndex: number) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Capture pointer for reliable tracking across touch/mouse
+    const element = e.currentTarget as HTMLElement;
+    element.setPointerCapture(e.pointerId);
 
     setDragState({
       draggingIndex: reversedIndex,
       startY: e.clientY,
-      currentY: e.clientY
+      currentY: e.clientY,
+      pointerId: e.pointerId,
+      element
     });
   }, []);
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
       if (!dragState) return;
+
+      // Only process events for our captured pointer
+      if (dragState.pointerId !== undefined && e.pointerId !== dragState.pointerId) return;
 
       setDragState(prev =>
         prev
@@ -243,8 +258,17 @@ export function LayerPanel({
     [dragState]
   );
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     if (!dragState) return;
+
+    // Release pointer capture if we have it
+    if (dragState.element && dragState.pointerId !== undefined) {
+      try {
+        dragState.element.releasePointerCapture(dragState.pointerId);
+      } catch {
+        // Pointer capture may already be released
+      }
+    }
 
     const deltaY = dragState.currentY - dragState.startY;
     const indexDelta = Math.round(deltaY / ITEM_HEIGHT);
@@ -262,15 +286,17 @@ export function LayerPanel({
 
   useEffect(() => {
     if (dragState) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
 
       return () => {
-        window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mouseup", handleMouseUp);
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", handlePointerUp);
       };
     }
-  }, [dragState, handleMouseMove, handleMouseUp]);
+  }, [dragState, handlePointerMove, handlePointerUp]);
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -452,7 +478,8 @@ export function LayerPanel({
                     cursor: isDragging ? "grabbing" : "grab",
                     backgroundColor: isDragging ? "#e2e8f0" : "transparent"
                   }}
-                  onMouseDown={e => handleMouseDown(e, reversedIndex)}
+                  onPointerDown={e => handlePointerDown(e, reversedIndex)}
+                  onContextMenu={e => e.preventDefault()}
                 >
                   <div style={dragLineStyle} />
                   <div style={dragLineStyle} />

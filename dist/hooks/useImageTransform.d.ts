@@ -8,8 +8,10 @@ interface UseImageTransformOptions {
 export declare function useImageTransform({ images, config, containerRef, onChange }: UseImageTransformOptions): {
     selectedId: string | null;
     isDragging: boolean;
+    isPinching: boolean;
     dragMode: DragMode;
-    handleMouseDown: (event: React.MouseEvent, imageId: string, mode: DragMode, handle?: ControlHandle["position"]) => void;
+    handlePointerDown: (event: React.PointerEvent, imageId: string, mode: DragMode, handle?: ControlHandle["position"]) => void;
+    handleTouchStart: (event: React.TouchEvent, imageId: string) => void;
     selectImage: (imageId: string | null) => void;
     deselectAll: () => void;
     deleteImage: (imageId: string) => void;
