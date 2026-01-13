@@ -345,7 +345,8 @@ export function useImageTransform({ images, config, containerRef, onChange }: Us
     []
   );
 
-  return {
+  // Use useMemo to return a stable object reference
+  return useMemo(() => ({
     selectedId,
     isDragging,
     dragMode,
@@ -358,5 +359,18 @@ export function useImageTransform({ images, config, containerRef, onChange }: Us
     sendToBack,
     reorderImage,
     updateImageTransform,
-  };
+  }), [
+    selectedId,
+    isDragging,
+    dragMode,
+    handleMouseDown,
+    selectImage,
+    deselectAll,
+    deleteImage,
+    deleteSelected,
+    bringToFront,
+    sendToBack,
+    reorderImage,
+    updateImageTransform,
+  ]);
 }

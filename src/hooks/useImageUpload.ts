@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 import type { ImageData, ImageTransform, EditorConfig } from '../types';
 
 const DEFAULT_ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -17,20 +17,41 @@ interface UseImageUploadOptions {
 export function useImageUpload({ config, onImageLoad, onError }: UseImageUploadOptions) {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Use refs to store latest callback values to avoid recreating processFile
+  const onImageLoadRef = useRef(onImageLoad);
+  const onErrorRef = useRef(onError);
+  const configRef = useRef(config);
+
+  useEffect(() => {
+    onImageLoadRef.current = onImageLoad;
+  }, [onImageLoad]);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
+
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
+
   const acceptedTypes = config.acceptedFileTypes || DEFAULT_ACCEPTED_TYPES;
   const maxFileSize = config.maxFileSize || DEFAULT_MAX_FILE_SIZE;
 
   const processFile = useCallback(
     (file: File) => {
+      const currentConfig = configRef.current;
+      const currentAcceptedTypes = currentConfig.acceptedFileTypes || DEFAULT_ACCEPTED_TYPES;
+      const currentMaxFileSize = currentConfig.maxFileSize || DEFAULT_MAX_FILE_SIZE;
+
       // Validate file type
-      if (!acceptedTypes.includes(file.type)) {
-        onError?.(`Невалиден тип файл. Позволени: ${acceptedTypes.join(', ')}`);
+      if (!currentAcceptedTypes.includes(file.type)) {
+        onErrorRef.current?.(`Невалиден тип файл. Позволени: ${currentAcceptedTypes.join(', ')}`);
         return;
       }
 
       // Validate file size
-      if (file.size > maxFileSize) {
-        onError?.(`Файлът е твърде голям. Максимален размер: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
+      if (file.size > currentMaxFileSize) {
+        onErrorRef.current?.(`Файлът е твърде голям. Максимален размер: ${Math.round(currentMaxFileSize / 1024 / 1024)}MB`);
         return;
       }
 
@@ -42,13 +63,14 @@ export function useImageUpload({ config, onImageLoad, onError }: UseImageUploadO
 
         img.onload = () => {
           const { naturalWidth, naturalHeight } = img;
+          const cfg = configRef.current;
 
           // Calculate initial size to fit within editor while maintaining aspect ratio
-          const printableArea = config.printableArea || {
+          const printableArea = cfg.printableArea || {
             minX: 0,
             minY: 0,
-            maxX: config.width,
-            maxY: config.height,
+            maxX: cfg.width,
+            maxY: cfg.height,
           };
 
           const areaWidth = printableArea.maxX - printableArea.minX;
@@ -79,7 +101,7 @@ export function useImageUpload({ config, onImageLoad, onError }: UseImageUploadO
             rotation: 0,
           };
 
-          onImageLoad({
+          onImageLoadRef.current({
             id: generateId(),
             src,
             naturalWidth,
@@ -89,19 +111,19 @@ export function useImageUpload({ config, onImageLoad, onError }: UseImageUploadO
         };
 
         img.onerror = () => {
-          onError?.('Грешка при зареждане на изображението');
+          onErrorRef.current?.('Грешка при зареждане на изображението');
         };
 
         img.src = src;
       };
 
       reader.onerror = () => {
-        onError?.('Грешка при четене на файла');
+        onErrorRef.current?.('Грешка при четене на файла');
       };
 
       reader.readAsDataURL(file);
     },
-    [acceptedTypes, maxFileSize, config, onImageLoad, onError]
+    [] // No dependencies - uses refs internally
   );
 
   const handleFileChange = useCallback(
@@ -140,12 +162,13 @@ export function useImageUpload({ config, onImageLoad, onError }: UseImageUploadO
     inputRef.current?.click();
   }, []);
 
-  return {
+  // Memoize return value for stable reference
+  return useMemo(() => ({
     inputRef,
     handleFileChange,
     handleDrop,
     handleDragOver,
     openFilePicker,
     acceptedTypes,
-  };
+  }), [handleFileChange, handleDrop, handleDragOver, openFilePicker, acceptedTypes]);
 }

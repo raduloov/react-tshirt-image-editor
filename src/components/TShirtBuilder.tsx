@@ -107,7 +107,7 @@ const ClippedImage = memo(function ClippedImage({
   );
 });
 
-export function TShirtBuilder({
+export const TShirtBuilder = memo(function TShirtBuilder({
   frontBgImage,
   backBgImage,
   config: configProp,
@@ -117,8 +117,10 @@ export function TShirtBuilder({
   style,
   initialImages
 }: TShirtBuilderProps) {
-  // Memoize config to prevent unnecessary re-renders
-  const config: EditorConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...configProp }), [configProp]);
+  // Memoize config with deep comparison to prevent unnecessary re-renders
+  // when parent passes inline config objects
+  const configKey = JSON.stringify(configProp);
+  const config: EditorConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...configProp }), [configKey]);
 
   const [currentView, setCurrentView] = useState<TShirtView>("front");
   const [viewImages, setViewImages] = useState<ViewImages>(initialImages || { front: [], back: [] });
@@ -534,4 +536,4 @@ export function TShirtBuilder({
       />
     </div>
   );
-}
+});

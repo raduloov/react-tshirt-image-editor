@@ -1,4 +1,3 @@
-import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as React$1 from 'react';
 import React__default from 'react';
 
@@ -85,7 +84,7 @@ interface DragState {
     handle?: ControlHandle['position'];
 }
 
-declare function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
+declare const TShirtBuilder: React__default.NamedExoticComponent<TShirtBuilderProps>;
 
 interface ControlsProps {
     transform: ImageTransform;

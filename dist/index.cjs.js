@@ -10,17 +10,34 @@ function generateId() {
 }
 function useImageUpload({ config, onImageLoad, onError }) {
     const inputRef = React.useRef(null);
+    // Use refs to store latest callback values to avoid recreating processFile
+    const onImageLoadRef = React.useRef(onImageLoad);
+    const onErrorRef = React.useRef(onError);
+    const configRef = React.useRef(config);
+    React.useEffect(() => {
+        onImageLoadRef.current = onImageLoad;
+    }, [onImageLoad]);
+    React.useEffect(() => {
+        onErrorRef.current = onError;
+    }, [onError]);
+    React.useEffect(() => {
+        configRef.current = config;
+    }, [config]);
     const acceptedTypes = config.acceptedFileTypes || DEFAULT_ACCEPTED_TYPES;
-    const maxFileSize = config.maxFileSize || DEFAULT_MAX_FILE_SIZE;
+    config.maxFileSize || DEFAULT_MAX_FILE_SIZE;
     const processFile = React.useCallback((file) => {
+        var _a, _b;
+        const currentConfig = configRef.current;
+        const currentAcceptedTypes = currentConfig.acceptedFileTypes || DEFAULT_ACCEPTED_TYPES;
+        const currentMaxFileSize = currentConfig.maxFileSize || DEFAULT_MAX_FILE_SIZE;
         // Validate file type
-        if (!acceptedTypes.includes(file.type)) {
-            onError === null || onError === void 0 ? void 0 : onError(`Невалиден тип файл. Позволени: ${acceptedTypes.join(', ')}`);
+        if (!currentAcceptedTypes.includes(file.type)) {
+            (_a = onErrorRef.current) === null || _a === void 0 ? void 0 : _a.call(onErrorRef, `Невалиден тип файл. Позволени: ${currentAcceptedTypes.join(', ')}`);
             return;
         }
         // Validate file size
-        if (file.size > maxFileSize) {
-            onError === null || onError === void 0 ? void 0 : onError(`Файлът е твърде голям. Максимален размер: ${Math.round(maxFileSize / 1024 / 1024)}MB`);
+        if (file.size > currentMaxFileSize) {
+            (_b = onErrorRef.current) === null || _b === void 0 ? void 0 : _b.call(onErrorRef, `Файлът е твърде голям. Максимален размер: ${Math.round(currentMaxFileSize / 1024 / 1024)}MB`);
             return;
         }
         const reader = new FileReader();
@@ -30,12 +47,13 @@ function useImageUpload({ config, onImageLoad, onError }) {
             const img = new Image();
             img.onload = () => {
                 const { naturalWidth, naturalHeight } = img;
+                const cfg = configRef.current;
                 // Calculate initial size to fit within editor while maintaining aspect ratio
-                const printableArea = config.printableArea || {
+                const printableArea = cfg.printableArea || {
                     minX: 0,
                     minY: 0,
-                    maxX: config.width,
-                    maxY: config.height,
+                    maxX: cfg.width,
+                    maxY: cfg.height,
                 };
                 const areaWidth = printableArea.maxX - printableArea.minX;
                 const areaHeight = printableArea.maxY - printableArea.minY;
@@ -60,7 +78,7 @@ function useImageUpload({ config, onImageLoad, onError }) {
                     size: { width, height },
                     rotation: 0,
                 };
-                onImageLoad({
+                onImageLoadRef.current({
                     id: generateId(),
                     src,
                     naturalWidth,
@@ -69,15 +87,18 @@ function useImageUpload({ config, onImageLoad, onError }) {
                 });
             };
             img.onerror = () => {
-                onError === null || onError === void 0 ? void 0 : onError('Грешка при зареждане на изображението');
+                var _a;
+                (_a = onErrorRef.current) === null || _a === void 0 ? void 0 : _a.call(onErrorRef, 'Грешка при зареждане на изображението');
             };
             img.src = src;
         };
         reader.onerror = () => {
-            onError === null || onError === void 0 ? void 0 : onError('Грешка при четене на файла');
+            var _a;
+            (_a = onErrorRef.current) === null || _a === void 0 ? void 0 : _a.call(onErrorRef, 'Грешка при четене на файла');
         };
         reader.readAsDataURL(file);
-    }, [acceptedTypes, maxFileSize, config, onImageLoad, onError]);
+    }, [] // No dependencies - uses refs internally
+    );
     const handleFileChange = React.useCallback((event) => {
         var _a;
         const file = (_a = event.target.files) === null || _a === void 0 ? void 0 : _a[0];
@@ -106,14 +127,15 @@ function useImageUpload({ config, onImageLoad, onError }) {
         var _a;
         (_a = inputRef.current) === null || _a === void 0 ? void 0 : _a.click();
     }, []);
-    return {
+    // Memoize return value for stable reference
+    return React.useMemo(() => ({
         inputRef,
         handleFileChange,
         handleDrop,
         handleDragOver,
         openFilePicker,
         acceptedTypes,
-    };
+    }), [handleFileChange, handleDrop, handleDragOver, openFilePicker, acceptedTypes]);
 }
 
 function useImageTransform({ images, config, containerRef, onChange }) {
@@ -370,7 +392,8 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         newImages.splice(toIndex, 0, moved);
         (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, newImages);
     }, []);
-    return {
+    // Use useMemo to return a stable object reference
+    return React.useMemo(() => ({
         selectedId,
         isDragging,
         dragMode,
@@ -383,7 +406,20 @@ function useImageTransform({ images, config, containerRef, onChange }) {
         sendToBack,
         reorderImage,
         updateImageTransform,
-    };
+    }), [
+        selectedId,
+        isDragging,
+        dragMode,
+        handleMouseDown,
+        selectImage,
+        deselectAll,
+        deleteImage,
+        deleteSelected,
+        bringToFront,
+        sendToBack,
+        reorderImage,
+        updateImageTransform,
+    ]);
 }
 
 const HANDLE_SIZE = 10;
@@ -900,9 +936,11 @@ const ClippedImage = React.memo(function ClippedImage({ imageData, printableArea
     }), [transform.position.x, transform.position.y, transform.size.width, transform.size.height, transform.rotation, printableArea]);
     return (jsxRuntime.jsx("img", { src: imageData.src, alt: "\u041A\u0430\u0447\u0435\u043D \u0434\u0438\u0437\u0430\u0439\u043D", style: imageStyle, draggable: false }));
 });
-function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }) {
-    // Memoize config to prevent unnecessary re-renders
-    const config = React.useMemo(() => ({ ...DEFAULT_CONFIG, ...configProp }), [configProp]);
+const TShirtBuilder = React.memo(function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange, onExport, className, style, initialImages }) {
+    // Memoize config with deep comparison to prevent unnecessary re-renders
+    // when parent passes inline config objects
+    const configKey = JSON.stringify(configProp);
+    const config = React.useMemo(() => ({ ...DEFAULT_CONFIG, ...configProp }), [configKey]);
     const [currentView, setCurrentView] = React.useState("front");
     const [viewImages, setViewImages] = React.useState(initialImages || { front: [], back: [] });
     const [bgImage, setBgImage] = React.useState(null);
@@ -1121,7 +1159,7 @@ function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, onChange
                                     setExportButtonHovered(false);
                                     setExportButtonActive(false);
                                 }, onMouseDown: () => setExportButtonActive(true), onMouseUp: () => setExportButtonActive(false), children: [jsxRuntime.jsx("svg", { width: "18", height: "18", viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: jsxRuntime.jsx("path", { d: "M14 10v2.667A1.334 1.334 0 0112.667 14H3.333A1.334 1.334 0 012 12.667V10M4.667 6.667L8 3.333l3.333 3.334M8 3.333V10", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) }), "\u0417\u0430\u0432\u044A\u0440\u0448\u0438 \u0434\u0438\u0437\u0430\u0439\u043D"] }))] })] }), jsxRuntime.jsx("input", { ref: inputRef, type: "file", accept: acceptedTypes.join(","), onChange: handleFileChange, style: { display: "none" } })] }));
-}
+});
 
 exports.Controls = Controls;
 exports.LayerPanel = LayerPanel;
