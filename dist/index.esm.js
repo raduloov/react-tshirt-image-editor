@@ -202,6 +202,24 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
     const dragStateRef = useRef(null);
     const pinchStateRef = useRef(null);
     const [isPinching, setIsPinching] = useState(false);
+    // Store latest values in refs to avoid recreating callbacks during drag
+    const imagesRef = useRef(images);
+    const onChangeRef = useRef(onChange);
+    const configRef = useRef(config);
+    const displayScaleRef = useRef(displayScale);
+    // Keep refs in sync with props
+    useEffect(() => {
+        imagesRef.current = images;
+    }, [images]);
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
+    useEffect(() => {
+        configRef.current = config;
+    }, [config]);
+    useEffect(() => {
+        displayScaleRef.current = displayScale;
+    }, [displayScale]);
     // Auto-select newly added image
     useEffect(() => {
         if (images.length > 0 && !selectedId) {
@@ -254,19 +272,24 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
             element,
         };
     }, [images]);
+    // Stable pointer move handler that reads from refs
     const handlePointerMove = useCallback((event) => {
+        var _a;
         const dragState = dragStateRef.current;
         if (!dragState)
             return;
         // Only process events for our captured pointer
         if (dragState.pointerId !== undefined && event.pointerId !== dragState.pointerId)
             return;
-        const image = images.find((img) => img.id === dragState.imageId);
+        const currentImages = imagesRef.current;
+        const currentConfig = configRef.current;
+        const currentDisplayScale = displayScaleRef.current;
+        const image = currentImages.find((img) => img.id === dragState.imageId);
         if (!image)
             return;
         // Scale delta by inverse of display scale to convert screen pixels to original coordinate space
-        const deltaX = (event.clientX - dragState.startPosition.x) / displayScale;
-        const deltaY = (event.clientY - dragState.startPosition.y) / displayScale;
+        const deltaX = (event.clientX - dragState.startPosition.x) / currentDisplayScale;
+        const deltaY = (event.clientY - dragState.startPosition.y) / currentDisplayScale;
         let newTransform;
         switch (dragState.mode) {
             case 'move':
@@ -281,7 +304,7 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
             case 'resize': {
                 const { handle } = dragState;
                 const aspectRatio = image.naturalWidth / image.naturalHeight;
-                const minSize = config.minImageSize || 20;
+                const minSize = currentConfig.minImageSize || 20;
                 let newWidth = dragState.startTransform.size.width;
                 let newX = dragState.startTransform.position.x;
                 let newY = dragState.startTransform.position.y;
@@ -328,7 +351,7 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
                 break;
             }
             case 'rotate': {
-                if (!config.allowRotation) {
+                if (!currentConfig.allowRotation) {
                     return;
                 }
                 // Get container position to convert client coords to local coords
@@ -338,9 +361,9 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
                 const rect = container.getBoundingClientRect();
                 // Image center in local (canvas) coordinates - scaled for display
                 const centerX = (dragState.startTransform.position.x +
-                    dragState.startTransform.size.width / 2) * displayScale;
+                    dragState.startTransform.size.width / 2) * currentDisplayScale;
                 const centerY = (dragState.startTransform.position.y +
-                    dragState.startTransform.size.height / 2) * displayScale;
+                    dragState.startTransform.size.height / 2) * currentDisplayScale;
                 // Convert pointer positions to local coordinates (already in screen space)
                 const startLocalX = dragState.startPosition.x - rect.left;
                 const startLocalY = dragState.startPosition.y - rect.top;
@@ -359,8 +382,11 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
             default:
                 return;
         }
-        updateImageTransform(dragState.imageId, newTransform);
-    }, [images, config.minImageSize, config.allowRotation, containerRef, updateImageTransform, displayScale]);
+        // Use ref-based update to avoid dependency on images/onChange
+        const updatedImages = currentImages.map((img) => img.id === dragState.imageId ? { ...img, transform: clampTransform(newTransform) } : img);
+        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, updatedImages);
+    }, [containerRef, clampTransform] // Minimal stable dependencies
+    );
     const handlePointerUp = useCallback((event) => {
         const dragState = dragStateRef.current;
         // Release pointer capture if we have it
@@ -405,11 +431,16 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
             startCenter: center,
         };
     }, [images]);
+    // Stable touch move handler that reads from refs
     const handleTouchMove = useCallback((event) => {
+        var _a;
         const pinchState = pinchStateRef.current;
         if (!pinchState || event.touches.length !== 2)
             return;
-        const image = images.find((img) => img.id === pinchState.imageId);
+        const currentImages = imagesRef.current;
+        const currentConfig = configRef.current;
+        const currentDisplayScale = displayScaleRef.current;
+        const image = currentImages.find((img) => img.id === pinchState.imageId);
         if (!image)
             return;
         event.preventDefault();
@@ -421,7 +452,7 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
         const scale = currentDistance / pinchState.startDistance;
         // Calculate new size maintaining aspect ratio
         const aspectRatio = image.naturalWidth / image.naturalHeight;
-        const minSize = config.minImageSize || 20;
+        const minSize = currentConfig.minImageSize || 20;
         const newWidth = Math.max(minSize, pinchState.startTransform.size.width * scale);
         const newHeight = newWidth / aspectRatio;
         // Get container rect to convert center coordinates
@@ -430,14 +461,14 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
             return;
         const rect = container.getBoundingClientRect();
         // Calculate center movement (for panning while pinching), scaled to original coordinates
-        const centerDeltaX = (currentCenter.x - pinchState.startCenter.x) / displayScale;
-        const centerDeltaY = (currentCenter.y - pinchState.startCenter.y) / displayScale;
+        const centerDeltaX = (currentCenter.x - pinchState.startCenter.x) / currentDisplayScale;
+        const centerDeltaY = (currentCenter.y - pinchState.startCenter.y) / currentDisplayScale;
         // Calculate the image center in container coordinates (original coordinate space)
         const startImageCenterX = pinchState.startTransform.position.x + pinchState.startTransform.size.width / 2;
         const startImageCenterY = pinchState.startTransform.position.y + pinchState.startTransform.size.height / 2;
         // Scale around the pinch center point (convert screen to original coordinates)
-        const pinchCenterX = (pinchState.startCenter.x - rect.left) / displayScale;
-        const pinchCenterY = (pinchState.startCenter.y - rect.top) / displayScale;
+        const pinchCenterX = (pinchState.startCenter.x - rect.left) / currentDisplayScale;
+        const pinchCenterY = (pinchState.startCenter.y - rect.top) / currentDisplayScale;
         // Calculate new position to keep the pinch center stable
         const newCenterX = pinchCenterX + (startImageCenterX - pinchCenterX) * scale + centerDeltaX;
         const newCenterY = pinchCenterY + (startImageCenterY - pinchCenterY) * scale + centerDeltaY;
@@ -448,8 +479,11 @@ function useImageTransform({ images, config, containerRef, onChange, displayScal
             size: { width: newWidth, height: newHeight },
             rotation: pinchState.startTransform.rotation,
         };
-        updateImageTransform(pinchState.imageId, newTransform);
-    }, [images, config.minImageSize, containerRef, updateImageTransform, displayScale]);
+        // Use ref-based update to avoid dependency on images/onChange
+        const updatedImages = currentImages.map((img) => img.id === pinchState.imageId ? { ...img, transform: clampTransform(newTransform) } : img);
+        (_a = onChangeRef.current) === null || _a === void 0 ? void 0 : _a.call(onChangeRef, updatedImages);
+    }, [containerRef, clampTransform] // Minimal stable dependencies
+    );
     const handleTouchEnd = useCallback(() => {
         setIsPinching(false);
         pinchStateRef.current = null;
