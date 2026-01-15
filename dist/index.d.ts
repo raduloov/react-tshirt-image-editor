@@ -27,6 +27,18 @@ interface ViewImages {
     front: ImageData[];
     back: ImageData[];
 }
+interface BackgroundOption {
+    /** Unique identifier for this background color option */
+    id: string;
+    /** Display name for the color (e.g., "White", "Blue") */
+    name: string;
+    /** Color value for the selector button (hex, rgb, etc.) */
+    color: string;
+    /** Background image URL for front view */
+    frontImage: string;
+    /** Background image URL for back view */
+    backImage: string;
+}
 interface BoundingBox {
     minX: number;
     minY: number;
@@ -69,10 +81,16 @@ interface ResponsiveConfig$1 {
     mobileCollapsedByDefault?: boolean;
 }
 interface TShirtBuilderProps {
-    /** Background image for front view (e.g., t-shirt template) */
+    /** Background image for front view (e.g., t-shirt template) - used when backgrounds is not provided */
     frontBgImage?: string;
-    /** Background image for back view */
+    /** Background image for back view - used when backgrounds is not provided */
     backBgImage?: string;
+    /** Multiple background options with different colors */
+    backgrounds?: BackgroundOption[];
+    /** Initial selected background id (defaults to first background) */
+    initialBackgroundId?: string;
+    /** Callback when background color is changed */
+    onBackgroundChange?: (backgroundId: string) => void;
     /** Editor configuration */
     config?: Partial<EditorConfig>;
     /** Responsive configuration for mobile/tablet adaptation */
@@ -104,7 +122,7 @@ interface DragState {
     handle?: ControlHandle['position'];
 }
 
-declare function TShirtBuilder({ frontBgImage, backBgImage, config: configProp, responsive: responsiveProp, onChange, onExport, className, style, initialImages }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
+declare function TShirtBuilder({ frontBgImage, backBgImage, backgrounds, initialBackgroundId, onBackgroundChange, config: configProp, responsive: responsiveProp, onChange, onExport, className, style, initialImages }: TShirtBuilderProps): react_jsx_runtime.JSX.Element;
 
 interface ControlsProps {
     transform: ImageTransform;
@@ -128,8 +146,10 @@ interface LayerPanelProps {
     compact?: boolean;
     /** Mobile mode for touch-optimized controls */
     isMobile?: boolean;
+    /** Hide the add image button (when rendered separately outside) */
+    hideAddButton?: boolean;
 }
-declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, compact, isMobile }: LayerPanelProps): react_jsx_runtime.JSX.Element;
+declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, compact, isMobile, hideAddButton }: LayerPanelProps): react_jsx_runtime.JSX.Element;
 
 interface UploadState {
     /** Whether an upload is currently in progress */
@@ -221,4 +241,4 @@ declare function exportToDataUrl(canvas: HTMLCanvasElement, backgroundImage: HTM
 declare function createOffscreenCanvas(width: number, height: number): HTMLCanvasElement;
 
 export { Controls, LayerPanel, TShirtBuilder, createOffscreenCanvas, exportToDataUrl, useImageTransform, useImageUpload, useResponsive };
-export type { BoundingBox, Breakpoint, ControlHandle, DragMode, DragState, EditorConfig, ImageData, ImageTransform, Position, ResponsiveState, Size, TShirtBuilderProps, TShirtView, UploadState, ViewImages };
+export type { BackgroundOption, BoundingBox, Breakpoint, ControlHandle, DragMode, DragState, EditorConfig, ImageData, ImageTransform, Position, ResponsiveState, Size, TShirtBuilderProps, TShirtView, UploadState, ViewImages };

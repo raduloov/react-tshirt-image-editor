@@ -12,6 +12,8 @@ interface LayerPanelProps {
     compact?: boolean;
     /** Mobile mode for touch-optimized controls */
     isMobile?: boolean;
+    /** Hide the add image button (when rendered separately outside) */
+    hideAddButton?: boolean;
 }
-export declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, compact, isMobile }: LayerPanelProps): import("react/jsx-runtime").JSX.Element;
+export declare function LayerPanel({ images, selectedId, onSelect, onDelete, onReorder, onAddImage, currentView, onViewChange, compact, isMobile, hideAddButton }: LayerPanelProps): import("react/jsx-runtime").JSX.Element;
 export {};

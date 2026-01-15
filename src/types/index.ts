@@ -29,6 +29,19 @@ export interface ViewImages {
   back: ImageData[];
 }
 
+export interface BackgroundOption {
+  /** Unique identifier for this background color option */
+  id: string;
+  /** Display name for the color (e.g., "White", "Blue") */
+  name: string;
+  /** Color value for the selector button (hex, rgb, etc.) */
+  color: string;
+  /** Background image URL for front view */
+  frontImage: string;
+  /** Background image URL for back view */
+  backImage: string;
+}
+
 export interface BoundingBox {
   minX: number;
   minY: number;
@@ -75,10 +88,16 @@ export interface ResponsiveConfig {
 }
 
 export interface TShirtBuilderProps {
-  /** Background image for front view (e.g., t-shirt template) */
+  /** Background image for front view (e.g., t-shirt template) - used when backgrounds is not provided */
   frontBgImage?: string;
-  /** Background image for back view */
+  /** Background image for back view - used when backgrounds is not provided */
   backBgImage?: string;
+  /** Multiple background options with different colors */
+  backgrounds?: BackgroundOption[];
+  /** Initial selected background id (defaults to first background) */
+  initialBackgroundId?: string;
+  /** Callback when background color is changed */
+  onBackgroundChange?: (backgroundId: string) => void;
   /** Editor configuration */
   config?: Partial<EditorConfig>;
   /** Responsive configuration for mobile/tablet adaptation */

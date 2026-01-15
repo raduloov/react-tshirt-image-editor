@@ -21,6 +21,7 @@ export type {
   ImageData,
   TShirtView,
   ViewImages,
+  BackgroundOption,
   BoundingBox,
   EditorConfig,
   TShirtBuilderProps,

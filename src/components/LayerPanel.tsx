@@ -14,6 +14,8 @@ interface LayerPanelProps {
   compact?: boolean;
   /** Mobile mode for touch-optimized controls */
   isMobile?: boolean;
+  /** Hide the add image button (when rendered separately outside) */
+  hideAddButton?: boolean;
 }
 
 const ITEM_HEIGHT = 56; // Height of each layer item in pixels (desktop)
@@ -217,7 +219,8 @@ export function LayerPanel({
   currentView,
   onViewChange,
   compact = false,
-  isMobile = false
+  isMobile = false,
+  hideAddButton = false
 }: LayerPanelProps) {
   // Adjust panel style for compact mode
   const dynamicPanelStyle: React.CSSProperties = compact
@@ -542,49 +545,51 @@ export function LayerPanel({
           </div>
         </div>
       )}
-      <div style={{ padding: "12px 12px 4px" }}>
-        <button
-          style={{
-            ...getMobileAddButtonStyle(isMobile),
-            margin: 0,
-            ...(addButtonActive
-              ? {
-                  filter: "brightness(0.9)",
-                  transform: "scale(0.95)"
-                }
-              : addButtonHovered
+      {!hideAddButton && (
+        <div style={{ padding: "12px 12px 4px" }}>
+          <button
+            style={{
+              ...getMobileAddButtonStyle(isMobile),
+              margin: 0,
+              ...(addButtonActive
                 ? {
-                    filter: "brightness(0.9)"
+                    filter: "brightness(0.9)",
+                    transform: "scale(0.95)"
                   }
-                : {})
-          }}
-          onClick={onAddImage}
-          onMouseEnter={() => setAddButtonHovered(true)}
-          onMouseLeave={() => {
-            setAddButtonHovered(false);
-            setAddButtonActive(false);
-          }}
-          onMouseDown={() => setAddButtonActive(true)}
-          onMouseUp={() => setAddButtonActive(false)}
-        >
-          {isMobile ? (
-            // Camera icon for mobile
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          ) : (
-            <PlusIcon />
-          )}
-          {isMobile ? "Качи снимка" : "Добави изображение"}
-        </button>
-      </div>
+                : addButtonHovered
+                  ? {
+                      filter: "brightness(0.9)"
+                    }
+                  : {})
+            }}
+            onClick={onAddImage}
+            onMouseEnter={() => setAddButtonHovered(true)}
+            onMouseLeave={() => {
+              setAddButtonHovered(false);
+              setAddButtonActive(false);
+            }}
+            onMouseDown={() => setAddButtonActive(true)}
+            onMouseUp={() => setAddButtonActive(false)}
+          >
+            {isMobile ? (
+              // Camera icon for mobile
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            ) : (
+              <PlusIcon />
+            )}
+            {isMobile ? "Качи снимка" : "Добави изображение"}
+          </button>
+        </div>
+      )}
       {images.length === 0 ? (
         <div style={{
           ...emptyStyle,
